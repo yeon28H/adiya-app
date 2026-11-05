@@ -2,7 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#F5B700">
   <title>어디야? · 함께 가고, 무사히 도착하고.</title>
   <meta name="description" content="모임이 끝난 뒤 비슷한 방향으로 귀가하는 사람들을 연결하고, 마지막 한 사람까지 안전하게 귀가하도록 돕는 AI 기반 귀가 동행 서비스.">
@@ -10,6 +13,8 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<div id="device">
+<div id="scroller">
   <header class="topbar">
     <div class="container">
       <a class="brand" href="#/" aria-label="어디야? 처음으로">
@@ -28,6 +33,8 @@
       <span>시연용 MVP · 데이터는 이 브라우저에만 저장돼요 · <a href="#" id="resetData">시연 데이터 초기화</a></span>
     </div>
   </footer>
+</div>
+</div>
 
   <datalist id="stations"></datalist>
 

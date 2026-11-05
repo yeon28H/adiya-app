@@ -61,7 +61,7 @@
   function toast(msg) {
     const w = document.createElement('div'); w.className = 'toast-wrap';
     w.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
-    document.body.appendChild(w); setTimeout(() => w.remove(), 2400);
+    (document.getElementById('device') || document.body).appendChild(w); setTimeout(() => w.remove(), 2400);
   }
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); } catch {
@@ -86,7 +86,7 @@
     const s = Store.getSession(); const mt = s && Store.getMeeting(s.code);
     const me = mt && mt.members.find(x => x.id === s.memberId);
     $nav.innerHTML = me
-      ? `<a class="who" href="#/m/${mt.code}">${icon('users', 16)}${esc(me.name)} · ${esc(mt.name)}</a><button data-act="leave" aria-label="모임에서 나가기">나가기</button>`
+      ? `<a class="who" href="#/m/${mt.code}">${icon('users', 16)}<span class="who-t">${esc(mt.name)}</span></a><button data-act="leave" aria-label="모임에서 나가기">나가기</button>`
       : `<a class="hide-sm" href="#/join">모임 참여</a><a href="#/create">모임 만들기</a>`;
   }
 
@@ -94,7 +94,7 @@
   const back = (href, label) => `<a class="crumb" href="${href}">${icon('back', 16)}${label}</a>`;
   const stepper = n => {
     const L = ['모임', '귀가 정보', '동행 매칭', '귀가 현황'];
-    return `<div class="steps" aria-label="진행 단계">${L.map((l, i) => `<div class="s ${i + 1 < n ? 'done' : i + 1 === n ? 'on' : ''}">${l}</div>`).join('')}</div>`;
+    return `<div class="steps" aria-label="진행 단계">${L.map((l, i) => `<div class="s ${i + 1 < n ? 'pass' : i + 1 === n ? 'on' : ''}">${l}</div>`).join('')}</div>`;
   };
   const notFound = () => shell(`<div class="card center stack"><h2>모임을 찾을 수 없어요</h2><p class="muted">초대 코드가 올바른지 확인하거나 새 모임을 만들어 보세요.</p><div class="row wrap" style="justify-content:center"><a class="btn btn-primary" href="#/join">초대 코드 입력</a><a class="btn btn-ghost" href="#/create">모임 만들기</a></div></div>`);
 
@@ -126,7 +126,7 @@
           <a class="btn btn-primary btn-lg" href="#/create">${icon('plus')}모임 만들기</a>
           <a class="btn btn-soft btn-lg" href="#/join">${icon('key')}모임 참여하기</a>
         </div>
-        <p class="hero-note">${icon('clock', 18)}처음이라면 <a href="#" data-act="showcase" style="font-weight:700">1분 시연 체험하기</a>로 전체 흐름을 바로 볼 수 있어요.</p>
+        <p class="hero-note">${icon('clock', 18)}<span>처음이라면 <a href="#" data-act="showcase" style="font-weight:700">1분 시연 체험하기</a>로 전체 흐름을 바로 볼 수 있어요.</span></p>
       </div>
       <div class="phone" aria-hidden="true">
         <div class="bar"></div>
@@ -620,7 +620,7 @@
     $app.innerHTML = html;
     renderNav();
     document.title = '어디야? · 함께 가고, 무사히 도착하고.';
-    if (!window.__keepScroll) window.scrollTo(0, 0);
+    if (!window.__keepScroll) { window.scrollTo(0, 0); document.getElementById('scroller').scrollTo(0, 0); }
     window.__keepScroll = false;
   }
 
