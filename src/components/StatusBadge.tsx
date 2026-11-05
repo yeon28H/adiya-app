@@ -1,8 +1,10 @@
 import type { MemberStatus } from '@/types'
 
 const map: Record<MemberStatus, { label: string; cls: string }> = {
-  waiting: { label: '출발 전', cls: 'bg-neutral-200 text-neutral-700' },
-  moving: { label: '귀가 중', cls: 'bg-brand-200 text-neutral-900' },
+  ready: { label: '출발 전', cls: 'bg-neutral-200 text-neutral-700' },
+  started: { label: '귀가 중', cls: 'bg-brand-200 text-neutral-900' },
+  together: { label: '함께 이동 중', cls: 'bg-brand-300 text-neutral-900' },
+  check: { label: '안부 확인 중', cls: 'bg-red-200 text-red-900' },
   arrived: { label: '도착 완료', cls: 'bg-green-200 text-green-900' },
 }
 

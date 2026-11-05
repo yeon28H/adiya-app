@@ -3,22 +3,31 @@ export interface LatLng {
   lng: number
 }
 
-export type MemberStatus = 'waiting' | 'moving' | 'arrived'
+export type MemberStatus = 'ready' | 'started' | 'together' | 'check' | 'arrived'
+
+export interface Meeting {
+  id: string
+  code: string
+  name: string
+  place: string
+  end_time: string | null
+  capacity: number
+  host_user_id: string
+  created_at: string
+}
 
 export interface Member {
   id: string
+  meeting_id: string
+  user_id: string
   name: string
+  registered: boolean
   status: MemberStatus
-  position?: LatLng
-  updatedAt?: string
-}
-
-export interface HomeGroup {
-  id: string
-  title: string
-  area: string // 같은 지역(동선) 설명, 예: "강남역 → 분당선"
-  meetingPlace: string
-  departAt: string // ISO 문자열
-  members: Member[]
-  maxMembers: number
+  origin: string
+  dest: string
+  lat: number | null
+  lng: number | null
+  started_at: string | null
+  arrived_at: string | null
+  updated_at: string
 }

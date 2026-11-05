@@ -14,10 +14,13 @@ export default function Home() {
         귀가 모임 만들기
       </Link>
       <Link
-        to="/groups"
+        to="/join"
         className="block rounded-xl border border-brand-500 py-3 text-center font-semibold"
       >
-        모임 둘러보기
+        초대 코드로 참여하기
+      </Link>
+      <Link to="/groups" className="block text-center text-sm text-neutral-600 underline">
+        내 모임 보기
       </Link>
     </div>
   )
