@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><pre id="out">RUNNING</pre>
+<iframe id="f" style="width:390px;height:800px;border:0"></iframe>
+<script>
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+(async()=>{
+  const f=document.getElementById('f'); const res=[];
+  f.src='seed.html?to=dash'; await sleep(1200);
+  const code=f.contentWindow.location.hash.split('/')[2];
+  const routes=['#/','#/create','#/join','#/m/'+code,'#/m/'+code+'/register','#/m/'+code+'/match','#/m/'+code+'/settings','#/m/'+code+'/planb'];
+  for(const r of routes){
+    f.contentWindow.location.hash=r; await sleep(400);
+    const d=f.contentDocument.documentElement;
+    const wide=[...f.contentDocument.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>391).slice(0,3).map(e=>e.className||e.tagName);
+    res.push(r.replace(code,'CODE')+' scrollW='+d.scrollWidth+' clientW='+d.clientWidth+(wide.length?' WIDE:'+wide.join(','):''));
+  }
+  document.getElementById('out').textContent='DONE\n'+res.join('\n');
+})();
+</script>

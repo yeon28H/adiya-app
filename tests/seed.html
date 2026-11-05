@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- 스크린샷/수동 확인용: 시연 상태를 만들고 해당 화면으로 이동한다. 예) tests/seed.html?to=dash -->
+<script src="../js/stations.js"></script>
+<script src="../js/matching.js"></script>
+<script src="../js/store.js"></script>
+<script>
+  localStorage.clear();
+  const code = Store.seedShowcase();
+  const me = Store.getMe(code);
+  const to = new URLSearchParams(location.search).get('to') || 'dash';
+  if (to !== 'register') {
+    Store.registerInfo(code, me.id, { origin: '강남역', dest: '사당역', departTime: '22:35', mode: '지하철', privacy: 'area' });
+    Store.runMatch(code);
+    if (to === 'dash' || to === 'planb') {
+      Store.decideGroup(code, me.id, true);
+      Store.startHome(code, me.id);
+      const m = Store.getMeeting(code);
+      const demo = m.members.filter(x => x.demo);
+      Store.startHome(code, demo[0].id); Store.arrive(code, demo[0].id);
+      Store.startHome(code, demo[1].id);
+      Store.startHome(code, demo[2].id); Store.requestCheck(code, demo[2].id);
+    }
+  }
+  const path = { dash: '', match: '/match', register: '/register', planb: '/planb', settings: '/settings' }[to] ?? '';
+  location.replace('../index.html#/m/' + code + path);
+</script>
