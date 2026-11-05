@@ -1,7 +1,4 @@
-import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import MapView from '@/components/map/MapView'
-import { DEFAULT_CENTER, type MapMarker } from '@/components/map/types'
 import StatusBadge from '@/components/StatusBadge'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { mockGroups } from '@/lib/mockData'
@@ -11,22 +8,12 @@ export default function GroupDetail() {
   const group = mockGroups.find((g) => g.id === id)
   const { position, error } = useGeolocation(true)
 
-  const markers = useMemo<MapMarker[]>(() => {
-    const list: MapMarker[] = (group?.members ?? [])
-      .filter((m) => m.position)
-      .map((m) => ({ id: m.id, position: m.position!, label: m.name }))
-    if (position) list.push({ id: 'me', position, label: '내 위치' })
-    return list
-  }, [group, position])
-
   if (!group) return <p>모임을 찾을 수 없어요.</p>
 
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-bold">{group.title}</h1>
       <p className="text-sm text-neutral-600">{group.meetingPlace}</p>
-
-      <MapView center={position ?? DEFAULT_CENTER} markers={markers} className="h-64 w-full" />
 
       <section className="rounded-2xl bg-brand-50 p-3 text-sm">
         <div className="font-semibold">내 위치</div>
