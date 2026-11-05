@@ -1,35 +1,84 @@
-import { NavLink, Outlet } from 'react-router-dom'
-
-const tabs = [
-  { to: '/', label: '홈' },
-  { to: '/groups', label: '귀가모임' },
-  { to: '/groups/new', label: '만들기' },
-  { to: '/join', label: '참여' },
-]
+import { useEffect, useRef, useState } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { STATIONS } from '@/lib/stations'
+import { getLastMeeting, setLastMeeting } from '@/lib/session'
+import Icon, { BrandMark } from './Icon'
+import { ToastProvider } from './Toast'
 
 export default function Layout() {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const scroller = useRef<HTMLDivElement>(null)
+  const [last, setLast] = useState(getLastMeeting)
+
+  useEffect(() => {
+    const sync = () => setLast(getLastMeeting())
+    window.addEventListener('eodiya-session', sync)
+    return () => window.removeEventListener('eodiya-session', sync)
+  }, [])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    scroller.current?.scrollTo(0, 0)
+  }, [pathname])
+
   return (
-    <div className="mx-auto flex h-full max-w-md flex-col bg-white shadow-sm">
-      <header className="bg-brand-500 px-4 py-3 text-lg font-bold text-neutral-900">
-        아디야 <span className="text-sm font-medium">안심귀가</span>
-      </header>
-      <main className="flex-1 overflow-y-auto p-4">
-        <Outlet />
-      </main>
-      <nav className="grid grid-cols-4 border-t border-neutral-200 pb-[env(safe-area-inset-bottom)]">
-        {tabs.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            end
-            className={({ isActive }) =>
-              `py-3 text-center text-sm font-medium ${isActive ? 'text-brand-700' : 'text-neutral-500'}`
-            }
-          >
-            {t.label}
-          </NavLink>
+    <ToastProvider>
+      <div id="device">
+        <div id="scroller" ref={scroller}>
+          <header className="topbar">
+            <div className="container">
+              <Link className="brand" to="/" aria-label="어디야? 처음으로">
+                <BrandMark />
+                어디야?
+              </Link>
+              <nav className="nav" id="nav" aria-label="주 메뉴">
+                {last ? (
+                  <>
+                    <Link className="who" to={`/m/${last.code}`}>
+                      <Icon name="users" size={16} />
+                      <span className="who-t">{last.name}</span>
+                    </Link>
+                    <button
+                      aria-label="모임에서 나가기"
+                      onClick={() => {
+                        setLastMeeting(null)
+                        navigate('/')
+                      }}
+                    >
+                      나가기
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link className="hide-sm" to="/join">
+                      모임 참여
+                    </Link>
+                    <Link to="/create">모임 만들기</Link>
+                  </>
+                )}
+              </nav>
+            </div>
+          </header>
+
+          <main id="app">
+            <Outlet />
+          </main>
+
+          <footer className="footer">
+            <div className="container row between wrap">
+              <span>어디야? · 함께 가고, 무사히 도착하고.</span>
+              <span>귀가 동행 서비스 · 베타</span>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <datalist id="stations">
+        {STATIONS.map((s) => (
+          <option key={s.n} value={`${s.n}역`} />
         ))}
-      </nav>
-    </div>
+      </datalist>
+    </ToastProvider>
   )
 }

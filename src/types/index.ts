@@ -3,31 +3,75 @@ export interface LatLng {
   lng: number
 }
 
-export type MemberStatus = 'ready' | 'started' | 'together' | 'check' | 'arrived'
+export type MemberStatus ='ready' | 'started' | 'together' | 'check' | 'arrived'
+export type Privacy = 'exact' | 'area' | 'status'
+export type NoticeKind = 'info' | 'ok' | 'warn'
 
-export interface Meeting {
-  id: string
-  code: string
-  name: string
-  place: string
-  end_time: string | null
-  capacity: number
-  host_user_id: string
-  created_at: string
+export interface PlanB {
+  title: string
+  situation: string
 }
 
-export interface Member {
+/** 화면에서 쓰는 멤버 (DB 행을 camelCase / 밀리초 타임스탬프로 변환한 것) */
+export interface MemberView {
   id: string
-  meeting_id: string
-  user_id: string
+  userId: string
   name: string
   registered: boolean
   status: MemberStatus
   origin: string
   dest: string
-  lat: number | null
-  lng: number | null
-  started_at: string | null
-  arrived_at: string | null
-  updated_at: string
+  departTime: string // 'HH:MM'
+  mode: string
+  privacy: Privacy
+  shareStopped: boolean
+  arrivalNotice: boolean
+  buddy: string // 'host' 또는 member id
+  groupDecision: 'joined' | 'declined' | null
+  startedAt: number | null
+  arrivedAt: number | null
+  etaAt: number | null
+  checkStage: number
+  nearDest: boolean
+  prevStatus: MemberStatus | null
+  planB: PlanB | null
+  riskKey: string | null
+}
+
+export interface GroupView {
+  id: string
+  n: number
+  memberIds: string[]
+  score: number
+  sharedMin: number
+  spread: number
+  splitStation: string
+  splitDistrict: string
+  reasons: string[]
+  pairMode: boolean
+}
+
+export interface NoticeView {
+  id: string
+  ts: number
+  text: string
+  groupId: string | null
+  kind: NoticeKind
+}
+
+export interface MeetingView {
+  id: string
+  code: string
+  name: string
+  place: string
+  placeStation: string
+  endTime: string // 'HH:MM'
+  capacity: number
+  hostUserId: string
+  matchedAt: number | null
+  matchStale: boolean
+  members: MemberView[]
+  groups: GroupView[] | null // 매칭 전이면 null
+  soloIds: string[]
+  notices: NoticeView[]
 }
