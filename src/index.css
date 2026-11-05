@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #fff8e1;
+  --color-brand-100: #ffecb3;
+  --color-brand-200: #ffe082;
+  --color-brand-300: #ffd54f;
+  --color-brand-400: #ffca28;
+  --color-brand-500: #ffc107;
+  --color-brand-600: #ffb300;
+  --color-brand-700: #ffa000;
+  --color-brand-800: #ff8f00;
+  --color-brand-900: #ff6f00;
+  --font-sans: "Pretendard", system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900 antialiased;
+}
