@@ -6,7 +6,7 @@
 빌드 도구나 패키지 설치가 필요 없습니다. 이 폴더에서 정적 서버만 띄우면 됩니다.
 
 ```bash
-cd ai-work
+cd ai-work/prototype
 python -m http.server 5173
 # 브라우저에서 http://localhost:5173 접속
 ```
