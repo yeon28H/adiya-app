@@ -59,7 +59,7 @@ export default function Register() {
       <form className="card" onSubmit={onSubmit} noValidate>
         <div className="route-pair">
           <span className="label">출발역</span>
-          <span />
+          <span className="route-arrow" aria-hidden="true">→</span>
           <span className="label">목적지</span>
           <p className="default-note route-note">
             출발역은 모임 장소{mt.placeStation || mt.place ? `(${mt.placeStation || mt.place})` : ""}로 이미 선택돼 있어요. 다른 역에서 출발할 때만 바꿔 주세요.
@@ -68,7 +68,7 @@ export default function Register() {
             <StationPicker compact value={origin} onChange={setOrigin} />
             <div className="err">{errs.origin}</div>
           </div>
-          <span className="route-arrow" aria-hidden="true">→</span>
+          <span />
           <div>
             <StationPicker compact value={dest} onChange={setDest} />
             <div className="err">{errs.dest}</div>

@@ -81,13 +81,13 @@ export default function Create() {
 
         <div className="route-pair">
           <span className="label">출발 (모임 장소)</span>
-          <span />
+          <span className="route-arrow" aria-hidden="true">→</span>
           <span className="label">도착 (귀가 방향)</span>
           <div>
             <StationPicker compact value={place} onChange={setPlace} onLineChange={setFromLine} />
             <div className="err">{errs.place}</div>
           </div>
-          <span className="route-arrow" aria-hidden="true">→</span>
+          <span />
           <div>
             <StationPicker compact value={dest} onChange={setDest} onLineChange={setToLine} />
             <div className="err">{errs.dest}</div>
