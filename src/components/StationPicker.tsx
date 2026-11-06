@@ -68,7 +68,7 @@ export default function StationPicker({ value, onChange, onLineChange, compact =
         }}
       >
         <option value="" disabled>
-          {compact ? '① 호선 선택' : '① 호선을 먼저 선택하세요'}
+          {compact ? '호선 선택' : '호선을 먼저 선택하세요'}
         </option>
         {REGIONS.map((r) => (
           <optgroup key={r} label={r}>
@@ -87,7 +87,7 @@ export default function StationPicker({ value, onChange, onLineChange, compact =
         disabled={!lineInfo}
       >
         <option value="" disabled>
-          {lineInfo ? (compact ? '② 역 선택' : `② ${lineInfo.name}의 역을 선택하세요`) : compact ? '② 역 선택' : '② 호선을 먼저 선택해 주세요'}
+          {lineInfo ? (compact ? '역 선택' : `${lineInfo.name}의 역을 선택하세요`) : compact ? '역 선택' : '호선을 먼저 선택해 주세요'}
         </option>
         {lineInfo?.stations.map((s) => (
           <option key={s.key} value={s.key}>
