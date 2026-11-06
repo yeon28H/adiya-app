@@ -347,6 +347,15 @@ export default function Dashboard() {
             )}
           </div>
 
+          <div className="card yellow stack">
+            <div className="card-title" style={{ margin: 0 }}><Icon name="pin" size={20} /><h3>어디까지 왔는지 확인</h3></div>
+            <p className="small">귀가 중인 사람의 실시간 위치를 지도로 보고, 채팅으로 바로 물어볼 수 있어요.</p>
+            <Link className="btn btn-primary btn-block" to={`/m/${mt.code}/live`}><Icon name="pin" size={18} />실시간 위치 지도</Link>
+            <Link className="btn btn-soft btn-block" to={`/m/${mt.code}/chat`}>
+              <Icon name="bell" size={18} />모임 채팅{ctx.unread > 0 && <span className="tag o" style={{ marginLeft: 6 }}>{ctx.unread > 99 ? "99+" : ctx.unread}</span>}
+            </Link>
+          </div>
+
           <div className="card">
             <div className="card-title"><Icon name="shield" size={20} /><h3>내 설정</h3></div>
             <div className="stack">

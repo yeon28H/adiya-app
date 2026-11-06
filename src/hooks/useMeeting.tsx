@@ -3,7 +3,8 @@ import { Navigate, Outlet, useParams } from 'react-router-dom'
 import * as api from '@/lib/api'
 import { lastTrainInfo, runMatching, travelMin } from '@/lib/matching'
 import { setLastMeeting } from '@/lib/session'
-import type { GroupView, MeetingView, MemberView, PlanB, Privacy } from '@/types'
+import { distanceMeters } from '@/lib/geo'
+import type { ChatMessage, GroupView, MeetingView, MemberView, PlanB, Privacy } from '@/types'
 import { Loading, NotFound } from '@/components/ui'
 
 const GRACE_MIN = 5
@@ -46,6 +47,13 @@ export interface MeetingCtx {
   nudge: () => Promise<number>
   requestCheck: (memberId: string) => Promise<void>
   resolveCheck: (memberId: string, action: 'ok' | 'arrived') => Promise<void>
+  /** 내 위치를 지금 한 번 공유(갱신)한다. 주소 설명은 가능하면 함께 저장. */
+  shareLocation: (loc: { lat: number; lng: number; accuracy?: number | null; label?: string | null }) => Promise<void>
+  /** 채팅 */
+  messages: ChatMessage[]
+  unread: number
+  sendChat: (body: string) => Promise<void>
+  markChatRead: () => void
 }
 
 const Ctx = createContext<MeetingCtx | null>(null)
@@ -93,6 +101,72 @@ export function MeetingRoute() {
   }, [meetingId, reload])
 
   const me = state ? (state.mt.members.find((x) => x.userId === state.myUserId) ?? null) : null
+
+  /* ---------- 채팅 ---------- */
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const readKey = meetingId ? `eodiya.chatread.${meetingId}` : ''
+  const [lastRead, setLastRead] = useState(0)
+  useEffect(() => {
+    setLastRead(readKey ? Number(localStorage.getItem(readKey) ?? 0) : 0)
+  }, [readKey])
+
+  useEffect(() => {
+    if (!meetingId) return
+    let alive = true
+    setMessages([])
+    void api
+      .fetchMessages(meetingId)
+      .then((list) => alive && setMessages((cur) => mergeMessages(list, cur)))
+      .catch(() => {})
+    const off = api.subscribeMessages(meetingId, (m) => setMessages((cur) => mergeMessages(cur, [m])))
+    return () => {
+      alive = false
+      off()
+    }
+  }, [meetingId])
+
+  const markChatRead = useCallback(() => {
+    const now = Date.now()
+    setLastRead(now)
+    if (readKey) localStorage.setItem(readKey, String(now))
+  }, [readKey])
+
+  const myUserId = state?.myUserId
+  const unread = messages.filter((m) => m.ts > lastRead && m.userId !== myUserId).length
+
+  /* ---------- 이동 중 실시간 위치 공유 ---------- */
+  const sharing = !!me && ['started', 'together', 'check'].includes(me.status) && !me.shareStopped
+  const lastSent = useRef<{ lat: number; lng: number; at: number } | null>(null)
+  const wasSharing = useRef(false)
+  useEffect(() => {
+    if (!meetingId) return
+    if (!sharing) {
+      // 도착했거나 공유를 중단했으면 남아 있는 내 위치를 지운다
+      if (wasSharing.current) {
+        wasSharing.current = false
+        lastSent.current = null
+        void api.clearMyLocation(meetingId).then(() => reload())
+      }
+      return
+    }
+    if (!('geolocation' in navigator)) return
+    wasSharing.current = true
+    const watch = navigator.geolocation.watchPosition(
+      (pos) => {
+        const cur = { lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now() }
+        const prev = lastSent.current
+        const moved = prev ? distanceMeters(prev, cur) : Infinity
+        const age = prev ? cur.at - prev.at : Infinity
+        // 15m 이상 움직였고 12초가 지났거나, 1분이 지났으면 전송
+        if (!((moved >= 15 && age >= 12000) || age >= 60000)) return
+        lastSent.current = cur
+        void api.setMyLocation(meetingId, { lat: cur.lat, lng: cur.lng, accuracy: pos.coords.accuracy })
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+    )
+    return () => navigator.geolocation.clearWatch(watch)
+  }, [meetingId, sharing, reload])
 
   // 마지막 모임 기억 (상단 메뉴용)
   useEffect(() => {
@@ -201,8 +275,13 @@ export function MeetingRoute() {
       },
       requestCheck: (id) => done(() => api.requestCheck(id)),
       resolveCheck: (id, action) => done(() => api.resolveCheck(id, action)),
+      shareLocation: (loc) => done(() => api.setMyLocation(mt.id, loc)),
+      messages,
+      unread,
+      sendChat: (body) => api.sendMessage(mt.id, body),
+      markChatRead,
     }
-  }, [state, me, reload])
+  }, [state, me, reload, messages, unread, markChatRead])
 
   /** 15초마다 자동 점검 (예상 도착 지연·막차 위험) — 각자 자기 행만 점검한다. */
   useEffect(() => {
@@ -277,3 +356,10 @@ async function tickSelf(mt: MeetingView, me: MemberView): Promise<boolean> {
   return changed
 }
 
+
+/** 메시지 목록 병합 (id 중복 제거, 시간순) */
+function mergeMessages(a: ChatMessage[], b: ChatMessage[]): ChatMessage[] {
+  const map = new Map<string, ChatMessage>()
+  for (const m of [...a, ...b]) map.set(m.id, m)
+  return [...map.values()].sort((x, y) => x.ts - y.ts)
+}

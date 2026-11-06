@@ -1,60 +1,52 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
-import { useToast } from '@/components/Toast'
 import StationPicker from '@/components/StationPicker'
+import { useToast } from '@/components/Toast'
 import { Back, MODES, PRIVACY, Shell, Stepper } from '@/components/ui'
 import { useMeeting } from '@/hooks/useMeeting'
+import { getCurrentFix, reverseGeocode, type GeoFix } from '@/lib/geo'
 import { fmtTime, nearestStation, toMin } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
 import type { Privacy } from '@/types'
 
 export default function Register() {
-  const { mt, me, register } = useMeeting()
+  const { mt, me, register, shareLocation } = useMeeting()
   const navigate = useNavigate()
   const toast = useToast()
-  const [origin, setOrigin] = useState(me.origin || mt.place)
+  const [origin, setOrigin] = useState(me.origin || mt.placeStation || mt.place)
   const [dest, setDest] = useState(me.dest)
   const [time, setTime] = useState(me.departTime || fmtTime(toMin(mt.endTime) + 5))
   const [mode, setMode] = useState(me.mode || '지하철')
-  const [privacy, setPrivacy] = useState<Privacy>(me.privacy || 'area')
+  const [privacy, setPrivacy] = useState<Privacy>(me.registered ? me.privacy : 'exact')
   const [errs, setErrs] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [locating, setLocating] = useState(false)
   const [locNote, setLocNote] = useState('')
+  const [gps, setGps] = useState<(GeoFix & { label: string | null }) | null>(null)
 
-  /** 현재 위치(GPS)에서 가장 가까운 역을 출발 위치로 채운다. 좌표는 저장하지 않고 역 이름만 사용한다. */
-  function locateMe() {
+  /** 실제 GPS 위치를 내 현재 위치로 설정한다. 매칭 계산용 출발역은 가장 가까운 역으로 자동 선택한다. */
+  async function locateMe() {
     setErrs((e) => ({ ...e, origin: '' }))
     setLocNote('')
-    if (!('geolocation' in navigator)) {
-      setErrs((e) => ({ ...e, origin: '이 기기는 위치 기능을 지원하지 않아요. 역을 직접 입력해 주세요.' }))
-      return
-    }
     setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false)
-        const near = nearestStation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-        if (!near || near.km > 20) {
-          setErrs((e) => ({ ...e, origin: '현재 위치 근처에 서비스 중인 역이 없어요. 역을 직접 입력해 주세요.' }))
-          return
-        }
+    try {
+      const fix = await getCurrentFix()
+      setGps({ ...fix, label: null })
+      const near = nearestStation(fix)
+      if (near && near.km <= 20) {
         setOrigin(near.station.key)
-        setLocNote(`현재 위치에서 가장 가까운 ${near.station.key}으로 설정했어요 (약 ${near.km.toFixed(1)}km)`)
-      },
-      (err) => {
-        setLocating(false)
-        setErrs((e) => ({
-          ...e,
-          origin:
-            err.code === err.PERMISSION_DENIED
-              ? '위치 권한이 거부됐어요. 브라우저 설정에서 허용하거나 역을 직접 입력해 주세요.'
-              : '현재 위치를 가져오지 못했어요. 잠시 후 다시 시도하거나 역을 직접 입력해 주세요.',
-        }))
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
-    )
+        setLocNote(`매칭 계산용 출발역: 가장 가까운 ${near.station.key} (약 ${near.km.toFixed(1)}km)`)
+      } else {
+        setLocNote('근처에 서비스 중인 역이 없어서 출발역은 직접 선택해 주세요.')
+      }
+      // 주소 설명은 나중에 채운다 (실패해도 좌표로 표시)
+      void reverseGeocode(fix.lat, fix.lng).then((label) => label && setGps((g) => (g ? { ...g, label } : g)))
+    } catch (err) {
+      setErrs((e) => ({ ...e, origin: (err as Error).message }))
+    } finally {
+      setLocating(false)
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -62,7 +54,7 @@ export default function Register() {
     const er: Record<string, string> = {}
     const o = findStation(origin)
     const d = findStation(dest)
-    if (!o) er.origin = '호선과 출발 역을 선택해 주세요.'
+    if (!o) er.origin = '호선과 출발역을 선택해 주세요.'
     if (!d) er.dest = '호선과 목적지 역을 선택해 주세요.'
     if (!time) er.time = '출발 시간을 선택해 주세요.'
     setErrs(er)
@@ -70,6 +62,7 @@ export default function Register() {
     setBusy(true)
     try {
       await register({ origin: o.key, dest: d.key, departTime: time, mode, privacy })
+      if (gps) await shareLocation({ lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy, label: gps.label })
       toast('귀가 정보를 등록했어요')
       navigate(`/m/${mt.code}/match`)
     } catch (err) {
@@ -91,7 +84,30 @@ export default function Register() {
       </div>
       <form className="card" onSubmit={onSubmit} noValidate>
         <div className="field">
-          <span className="label">현재 출발 위치</span>
+          <span className="label">현재 내 위치</span>
+          <button type="button" className="btn btn-primary btn-block" onClick={() => void locateMe()} disabled={locating}>
+            <Icon name="pin" size={18} />
+            {locating ? '위치 확인 중...' : gps ? '현재 위치 다시 가져오기' : '지금 내 위치로 설정 (GPS)'}
+          </button>
+          {gps && (
+            <div className="card cream" style={{ marginTop: 10, padding: 14 }}>
+              <div style={{ fontWeight: 700 }}>
+                <Icon name="pin" size={16} /> {gps.label ?? `${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)}`}
+              </div>
+              <div className="small muted">
+                정확도 약 ±{Math.round(gps.accuracy)}m · 모임 사람들에게는 아래 공개 범위에 따라 보여요
+              </div>
+              <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => setGps(null)}>
+                위치 설정 취소
+              </button>
+            </div>
+          )}
+          {locNote && <div className="hint">{locNote}</div>}
+          <div className="err">{errs.origin}</div>
+        </div>
+
+        <div className="field">
+          <span className="label">출발역 (매칭 계산용)</span>
           <StationPicker
             value={origin}
             onChange={(k) => {
@@ -99,22 +115,9 @@ export default function Register() {
               setLocNote('')
             }}
           />
-          <button
-            type="button"
-            className="btn btn-soft btn-sm"
-            style={{ marginTop: 8 }}
-            onClick={locateMe}
-            disabled={locating}
-          >
-            <Icon name="pin" size={16} />
-            {locating ? '위치 확인 중...' : '현재 위치로 설정'}
-          </button>
-          {locNote && <div className="hint">{locNote}</div>}
-          <div className="hint">
-            <Icon name="lock" size={13} /> 좌표는 저장하지 않고, 가장 가까운 역 이름만 사용해요.
-          </div>
-          <div className="err">{errs.origin}</div>
+          <div className="hint">같은 방향으로 가는 사람을 찾을 때 쓰는 기준 역이에요. 위치를 설정하면 가장 가까운 역으로 자동 선택돼요.</div>
         </div>
+
         <div className="field">
           <span className="label">귀가 목적지 (가까운 역)</span>
           <StationPicker value={dest} onChange={setDest} />
@@ -123,12 +126,14 @@ export default function Register() {
           </div>
           <div className="err">{errs.dest}</div>
         </div>
+
         <label className="field">
           <span className="label">예상 출발 시간</span>
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
           <div className="hint">모임 해산 예정 시간은 {mt.endTime}이에요.</div>
           <div className="err">{errs.time}</div>
         </label>
+
         <div className="field">
           <span className="label">이용 예정 교통수단</span>
           <div className="choice-grid">
@@ -143,6 +148,7 @@ export default function Register() {
             ))}
           </div>
         </div>
+
         <div className="field">
           <span className="label">위치 공개 범위</span>
           <div className="choice-list">
@@ -157,6 +163,7 @@ export default function Register() {
             ))}
           </div>
         </div>
+
         {errs.form && <div className="err">{errs.form}</div>}
         <button className="btn btn-primary btn-lg btn-block" style={{ marginTop: 26 }} type="submit" disabled={busy}>
           귀가 정보 {me.registered ? '저장' : '등록'}하기

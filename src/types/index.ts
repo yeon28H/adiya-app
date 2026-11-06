@@ -59,6 +59,22 @@ export interface NoticeView {
   kind: NoticeKind
 }
 
+export interface LocView {
+  lat: number
+  lng: number
+  accuracy: number | null
+  label: string | null
+  updatedAt: number
+}
+
+export interface ChatMessage {
+  id: string
+  userId: string
+  name: string
+  body: string
+  ts: number
+}
+
 export interface MeetingView {
   id: string
   code: string
@@ -74,4 +90,6 @@ export interface MeetingView {
   groups: GroupView[] | null // 매칭 전이면 null
   soloIds: string[]
   notices: NoticeView[]
+  /** 멤버 id → 현재 위치 (내가 볼 수 있는 것만: 내 위치 + 정확한 위치를 공개한 사람) */
+  locations: Record<string, LocView>
 }

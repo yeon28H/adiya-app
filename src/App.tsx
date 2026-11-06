@@ -1,7 +1,9 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Layout from '@/components/Layout'
-import { NotFound } from '@/components/ui'
+import { Loading, NotFound } from '@/components/ui'
 import { MeetingRoute } from '@/hooks/useMeeting'
+import Chat from '@/pages/Chat'
 import Created from '@/pages/Created'
 import Create from '@/pages/Create'
 import Dashboard from '@/pages/Dashboard'
@@ -11,6 +13,9 @@ import Match from '@/pages/Match'
 import PlanB from '@/pages/PlanB'
 import Register from '@/pages/Register'
 import Settings from '@/pages/Settings'
+
+// 지도(Leaflet)는 무거워서 지도 화면에 들어갈 때만 불러온다
+const Live = lazy(() => import('@/pages/Live'))
 
 export default function App() {
   return (
@@ -27,6 +32,15 @@ export default function App() {
           <Route path="match" element={<Match />} />
           <Route path="settings" element={<Settings />} />
           <Route path="planb" element={<PlanB />} />
+          <Route
+            path="live"
+            element={
+              <Suspense fallback={<Loading />}>
+                <Live />
+              </Suspense>
+            }
+          />
+          <Route path="chat" element={<Chat />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

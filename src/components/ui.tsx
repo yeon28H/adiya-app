@@ -31,9 +31,9 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
 }
 
 export const PRIVACY: Record<Privacy, { t: string; d: string }> = {
-  exact: { t: '정확한 위치 공개', d: '동행자에게 목적지 역·정류장 이름을 보여줘요. (집 주소는 입력하지 않아요)' },
-  area: { t: '대략적인 지역만 공개', d: '"○○구 방면"처럼 지역만 보여줘요. 추천 방식이에요.' },
-  status: { t: '귀가 상태만 공개', d: '목적지는 숨기고 귀가 시작·도착 상태만 보여줘요.' },
+  exact: { t: '정확한 위치 공개', d: '모임 사람들이 지도에서 내 실시간 위치(귀가 중)와 목적지 역을 볼 수 있어요. 집 주소는 입력하지 않아요.' },
+  area: { t: '대략적인 지역만 공개', d: '"○○구 방면"처럼 지역만 보여줘요. 지도에는 내 위치가 표시되지 않아요.' },
+  status: { t: '귀가 상태만 공개', d: '목적지와 위치는 숨기고 귀가 시작·도착 상태만 보여줘요.' },
 }
 
 export const MODES: [string, string][] = [

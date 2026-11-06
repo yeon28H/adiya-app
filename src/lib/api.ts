@@ -5,6 +5,8 @@ import type {
   MemberView,
   NoticeKind,
   NoticeView,
+  ChatMessage,
+  LocView,
   PlanB,
   Privacy,
 } from '@/types'
@@ -119,14 +121,26 @@ export async function fetchMeeting(code: string): Promise<MeetingState | null> {
   if (error) throw error
   if (!m) return null
 
-  const [mem, grp, notice] = await Promise.all([
+  const [mem, grp, notice, loc] = await Promise.all([
     supabase.from('members').select('*').eq('meeting_id', m.id).order('created_at', { ascending: true }),
     supabase.from('match_groups').select('*, match_group_members(member_id)').eq('meeting_id', m.id).order('n'),
     supabase.from('notices').select('*').eq('meeting_id', m.id).order('created_at', { ascending: false }).limit(40),
+    supabase.from('member_locations').select('*').eq('meeting_id', m.id),
   ])
   if (mem.error) throw mem.error
   if (grp.error) throw grp.error
   if (notice.error) throw notice.error
+  if (loc.error) throw loc.error
+  const locations: Record<string, LocView> = {}
+  for (const r of loc.data ?? []) {
+    locations[r.member_id] = {
+      lat: r.lat,
+      lng: r.lng,
+      accuracy: r.accuracy,
+      label: r.label,
+      updatedAt: new Date(r.updated_at).getTime(),
+    }
+  }
 
   const members = (mem.data ?? []).map(toMember)
   const groups: GroupView[] | null = m.matched_at
@@ -168,6 +182,7 @@ export async function fetchMeeting(code: string): Promise<MeetingState | null> {
     groups,
     soloIds,
     notices,
+    locations,
   }
   return { mt, myUserId }
 }
@@ -268,11 +283,76 @@ export function subscribeMeeting(meetingId: string, onChange: () => void): () =>
     ['notices', `meeting_id=eq.${meetingId}`],
     ['match_groups', `meeting_id=eq.${meetingId}`],
     ['meetings', `id=eq.${meetingId}`],
+    ['member_locations', `meeting_id=eq.${meetingId}`],
   ]
   for (const [table, filter] of tables) {
     channel.on('postgres_changes', { event: '*', schema: 'public', table, filter }, onChange)
   }
   channel.subscribe()
+  return () => {
+    void supabase.removeChannel(channel)
+  }
+}
+
+/* ---------- 위치 공유 ---------- */
+
+export async function setMyLocation(
+  meetingId: string,
+  loc: { lat: number; lng: number; accuracy?: number | null; label?: string | null },
+): Promise<void> {
+  const { error } = await supabase.rpc("set_my_location", {
+    p_meeting_id: meetingId,
+    p_lat: loc.lat,
+    p_lng: loc.lng,
+    p_accuracy: loc.accuracy ?? null,
+    p_label: loc.label ?? null,
+  })
+  if (error) throw fail(error.message)
+}
+
+export async function clearMyLocation(meetingId: string): Promise<void> {
+  const { error } = await supabase.rpc("clear_my_location", { p_meeting_id: meetingId })
+  if (error) throw fail(error.message)
+}
+
+/* ---------- 채팅 ---------- */
+
+const toMessage = (r: Row): ChatMessage => ({
+  id: r.id,
+  userId: r.user_id,
+  name: r.sender_name,
+  body: r.body,
+  ts: new Date(r.created_at).getTime(),
+})
+
+/** 최근 메시지 (오래된 순) */
+export async function fetchMessages(meetingId: string, limit = 100): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("meeting_id", meetingId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return (data ?? []).map(toMessage).reverse()
+}
+
+export async function sendMessage(meetingId: string, body: string): Promise<void> {
+  const userId = await ensureSession()
+  const { error } = await supabase.from("messages").insert({ meeting_id: meetingId, user_id: userId, body: body.trim() })
+  if (error) throw fail(error.message)
+}
+
+/** 새 메시지를 실시간으로 받는다. 반환값은 구독 해제 함수. */
+export function subscribeMessages(meetingId: string, onMessage: (m: ChatMessage) => void): () => void {
+  const channel = supabase
+    .channel(`chat:${meetingId}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages", filter: `meeting_id=eq.${meetingId}` },
+      (p) => onMessage(toMessage(p.new as Row)),
+    )
+    .subscribe()
   return () => {
     void supabase.removeChannel(channel)
   }
