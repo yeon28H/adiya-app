@@ -32,7 +32,9 @@ export default function StationPicker({ value, onChange }: Props) {
   return (
     <div className="stack" style={{ gap: 8 }}>
       <select aria-label="호선 선택" value={line} onChange={(e) => { setLine(e.target.value); onChange('') }}>
-        <option value="">① 호선을 먼저 선택하세요</option>
+        <option value="" disabled>
+          ① 호선을 먼저 선택하세요
+        </option>
         {REGIONS.map((r) => (
           <optgroup key={r} label={r}>
             {LINES.filter((l) => l.region === r).map((l) => (
@@ -49,7 +51,9 @@ export default function StationPicker({ value, onChange }: Props) {
         onChange={(e) => onChange(e.target.value)}
         disabled={!lineInfo}
       >
-        <option value="">{lineInfo ? `② ${lineInfo.name}의 역을 선택하세요` : '② 호선을 먼저 선택해 주세요'}</option>
+        <option value="" disabled>
+          {lineInfo ? `② ${lineInfo.name}의 역을 선택하세요` : '② 호선을 먼저 선택해 주세요'}
+        </option>
         {lineInfo?.stations.map((s) => (
           <option key={s.key} value={s.key}>
             {s.key}
@@ -75,11 +79,13 @@ export default function StationPicker({ value, onChange }: Props) {
   )
 }
 
+const SORTED_STATIONS = [...STATIONS].sort((a, b) => new Intl.Collator('ko').compare(a.key, b.key))
+
 /** 이름 검색용 datalist (페이지에 한 번만 렌더링) */
 export function StationDatalist() {
   return (
     <datalist id="stations">
-      {STATIONS.map((s) => (
+      {SORTED_STATIONS.map((s) => (
         <option key={s.key} value={s.key} />
       ))}
     </datalist>

@@ -39,11 +39,33 @@ for (const s of STATIONS) byName.set(s.n, [...(byName.get(s.n) ?? []), s])
 
 export const REGIONS: string[] = REGION_ORDER
 
+const collator = new Intl.Collator('ko')
+
+/** 'N호선' 또는 '부산 N호선'처럼 번호로 구분하는 노선이면 N, 아니면 null ('인천1호선'은 이름 노선으로 취급) */
+const lineNumber = (name: string): number | null => {
+  const m = name.match(/^(?:\S+ )?(\d+)호선$/)
+  return m ? Number(m[1]) : null
+}
+
+/** 호선 정렬: 1호선, 2호선, … 숫자 순이 먼저, 그다음 이름(가나다) 순 */
+const compareLines = (a: string, b: string) => {
+  const na = lineNumber(a)
+  const nb = lineNumber(b)
+  if (na !== null && nb !== null) return na - nb
+  if (na !== null) return -1
+  if (nb !== null) return 1
+  return collator.compare(a, b)
+}
+
+/** 노선 목록은 지역 순서 → 호선 번호 순, 각 노선의 역은 이름(가나다) 순으로 정렬한다. */
 export const LINES: LineInfo[] = RAW_LINES.map(([name, region, keys]) => ({
   name,
   region,
-  stations: keys.map((k) => byKey.get(k)).filter((s): s is Station => !!s),
-}))
+  stations: keys
+    .map((k) => byKey.get(k))
+    .filter((s): s is Station => !!s)
+    .sort((a, b) => collator.compare(a.n, b.n) || collator.compare(a.key, b.key)),
+})).sort((a, b) => REGION_ORDER.indexOf(a.region) - REGION_ORDER.indexOf(b.region) || compareLines(a.name, b.name))
 
 export const linesByRegion = (region: string) => LINES.filter((l) => l.region === region)
 
