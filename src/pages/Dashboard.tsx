@@ -26,13 +26,15 @@ export default function Dashboard() {
   const { mt, me } = ctx
   const toast = useToast()
   const [showDetail, setShowDetail] = useState(false)
+  const [showNotices, setShowNotices] = useState(false)
+  const seenKey = `eodiya.noticeseen.${mt.id}`
+  const [seenAt, setSeenAt] = useState(() => Number(localStorage.getItem(seenKey) ?? 0))
   const act = (fn: () => Promise<unknown>, msg?: string) => () => void fn().then(() => msg && toast(msg))
 
   const byId = (id: string) => mt.members.find((x) => x.id === id)
   const regd = mt.members.filter((x) => x.registered)
   const unreg = mt.members.filter((x) => !x.registered)
   const arrived = regd.filter((x) => x.status === 'arrived')
-  const onWay = regd.filter((x) => ['started', 'together', 'check'].includes(x.status))
   const needCheck = regd.filter((x) => x.status === 'check')
   const allDone = mt.members.length >= 2 && mt.members.every((x) => x.registered && x.status === 'arrived')
   const soloList = mt.groups ? regd.filter((x) => !groupOf(mt, x.id) || x.groupDecision === 'declined') : null
@@ -116,11 +118,6 @@ export default function Dashboard() {
           <button className="btn btn-ok btn-lg" onClick={act(ctx.arrive, '도착을 확인했어요')}><Icon name="check" size={18} />도착 완료</button>
           <Link className="btn btn-soft btn-lg" to={`/m/${mt.code}/planb`}><Icon name="swap" size={18} />귀가 플랜 B</Link>
         </div>
-        <div className="row wrap">
-          <span className="tag">시연</span>
-          <button className="btn btn-ghost btn-sm" onClick={act(() => ctx.setNear(true))}>목적지 근처 자동 감지</button>
-          <button className="btn btn-ghost btn-sm" onClick={act(ctx.simulateOverdue)}>예상 도착 시간 지난 상황</button>
-        </div>
       </div>
     )
   }
@@ -133,11 +130,11 @@ export default function Dashboard() {
       <div key="near" className="banner warn" style={{ background: 'var(--yellow-100)', borderColor: 'var(--yellow-300)' }}>
         <span className="ico" style={{ color: '#9A6B00' }}><Icon name="pin" size={22} /></span>
         <div className="grow">
-          <b>목적지 근처에 도착한 것 같아요</b>
-          <div className="small">위치를 자동으로 감지했어요. 도착 완료로 처리할까요?</div>
+          <b>{me.dest}에 도착한 것 같아요</b>
+          <div className="small">설정한 목적지에 도착한 것을 위치로 확인했어요. 도착 완료로 처리할까요?</div>
           <div className="row wrap" style={{ marginTop: 10 }}>
             <button className="btn btn-ok btn-sm" onClick={act(ctx.arrive, '도착을 확인했어요')}>네, 도착했어요</button>
-            <button className="btn btn-ghost btn-sm" onClick={act(() => ctx.setNear(false), '계속 귀가 중으로 유지할게요')}>아직이에요</button>
+            <button className="btn btn-ghost btn-sm" onClick={act(ctx.dismissNear, '계속 귀가 중으로 유지할게요')}>아직이에요</button>
           </div>
         </div>
       </div>,
@@ -240,7 +237,19 @@ export default function Dashboard() {
     )
   })
 
-  const notices = mt.notices.filter((n) => !n.groupId || (mine && n.groupId === mine.id) || host).slice(0, 8)
+  const notices = mt.notices.filter((n) => !n.groupId || (mine && n.groupId === mine.id) || host).slice(0, 20)
+  const unseen = notices.filter((n) => n.ts > seenAt).length
+  const toggleNotices = () => {
+    setShowDetail(false)
+    setShowNotices((open) => {
+      if (!open) {
+        const now = Date.now()
+        localStorage.setItem(seenKey, String(now))
+        setSeenAt(now)
+      }
+      return !open
+    })
+  }
   const lastArrived = mt.members.slice().sort((a, b) => (b.arrivedAt ?? 0) - (a.arrivedAt ?? 0))[0]
 
   return (
@@ -252,7 +261,10 @@ export default function Dashboard() {
             <button
               type="button"
               className="progress-btn"
-              onClick={() => setShowDetail((s) => !s)}
+              onClick={() => {
+                setShowNotices(false)
+                setShowDetail((s) => !s)
+              }}
               aria-expanded={showDetail}
               aria-label={`귀가 현황 ${arrived.length}/${mt.members.length}명 도착, 눌러서 자세히 보기`}
             >
@@ -262,6 +274,16 @@ export default function Dashboard() {
               <span className="progress-text">{arrived.length}/{mt.members.length}</span>
               <span className="progress-caret" aria-hidden="true">{showDetail ? '▲' : '▼'}</span>
             </button>
+            <button
+              type="button"
+              className="bell-btn"
+              onClick={toggleNotices}
+              aria-expanded={showNotices}
+              aria-label={`그룹 알림 ${unseen > 0 ? `새 알림 ${unseen}개` : ''}`}
+            >
+              <Icon name="bell" size={18} />
+              {unseen > 0 && <span className="bell-badge">{unseen > 9 ? '9+' : unseen}</span>}
+            </button>
           </div>
           <div className="meta">
             {(mt.fromLine || mt.toLine) && <span className="chip"><Icon name="train" size={16} />{routeText(mt)}</span>}
@@ -270,6 +292,21 @@ export default function Dashboard() {
             <span className="chip"><Icon name="users" size={16} />{mt.members.length}/{mt.capacity}명</span>
             <span className="chip"><Icon name="key" size={16} />{prettyCode(mt.code)}</span>
           </div>
+          {showNotices && (
+            <div className="card status-detail">
+              <div className="card-title"><Icon name="bell" size={20} /><h3>그룹 알림</h3></div>
+              {notices.length ? (
+                notices.map((n) => (
+                  <div key={n.id} className={`notice ${n.kind}`}>
+                    <span className="dot" />
+                    <div><span>{n.text}</span><time>{fmtClock(n.ts)}</time></div>
+                  </div>
+                ))
+              ) : (
+                <p className="small muted">아직 알림이 없어요.</p>
+              )}
+            </div>
+          )}
           {showDetail && (
             <div className="card status-detail">
               <div className="row between"><h3>전체 귀가 현황</h3><b>{arrived.length}/{mt.members.length}명 도착</b></div>
@@ -348,20 +385,6 @@ export default function Dashboard() {
         <aside className="side">
           <LastTrainCard me={me} onApply={act(ctx.applyRecommendedTime)} />
 
-          <div className="card">
-            <div className="card-title"><Icon name="bell" size={20} /><h3>그룹 알림</h3></div>
-            {notices.length ? (
-              notices.map((n) => (
-                <div key={n.id} className={`notice ${n.kind}`}>
-                  <span className="dot" />
-                  <div><span>{n.text}</span><time>{fmtClock(n.ts)}</time></div>
-                </div>
-              ))
-            ) : (
-              <p className="small muted">아직 알림이 없어요.</p>
-            )}
-          </div>
-
           <div className="card yellow stack">
             <div className="card-title" style={{ margin: 0 }}><Icon name="pin" size={20} /><h3>어디까지 왔는지 확인</h3></div>
             <p className="small">귀가 중인 사람의 실시간 위치를 지도로 보고, 채팅으로 바로 물어볼 수 있어요.</p>
@@ -381,22 +404,16 @@ export default function Dashboard() {
           </div>
 
           {host && (
-            <HostManager
-              mt={mt}
-              regd={regd}
-              arrived={arrived}
-              onWay={onWay}
-              needCheck={needCheck}
-              unreg={unreg}
-              soloList={soloList}
-              onNudge={() => void ctx.nudge().then((c) => toast(`${c}명에게 등록을 요청했어요`))}
-              isPublic={mt.isPublic}
-              onToggleRecruit={() =>
+            <button
+              className={`btn btn-block ${mt.isPublic ? "btn-warn" : "btn-soft"}`}
+              onClick={() =>
                 void setRecruiting(mt.id, !mt.isPublic)
                   .then(ctx.reload)
                   .then(() => toast(mt.isPublic ? "모집을 마감했어요" : "모집 중으로 다시 공개했어요"))
               }
-            />
+            >
+              {mt.isPublic ? "모집 마감하기" : "모집 다시 열기"}
+            </button>
           )}
         </aside>
       </div>
@@ -439,63 +456,6 @@ function LastTrainCard({ me, onApply }: { me: MemberView; onApply: () => void })
         </button>
       )}
       <p className="small muted" style={{ marginTop: 8 }}>※ 실제 서비스에서는 대중교통 API로 막차 시간을 가져와요.</p>
-    </div>
-  )
-}
-
-
-function HostManager(props: {
-  mt: MeetingView
-  regd: MemberView[]
-  arrived: MemberView[]
-  onWay: MemberView[]
-  needCheck: MemberView[]
-  unreg: MemberView[]
-  soloList: MemberView[] | null
-  onNudge: () => void
-  isPublic: boolean
-  onToggleRecruit: () => void
-}) {
-  const { regd, arrived, onWay, needCheck, unreg, soloList, onNudge, isPublic, onToggleRecruit } = props
-  const risky = regd
-    .filter((x) => x.status === 'ready')
-    .map((x) => ({ x, i: lastTrainInfo(x) }))
-    .filter((o) => o.i && o.i.level !== 'ok')
-  const lastLeft = regd.filter((x) => x.status !== 'arrived' && arrived.length > 0)
-  const names = (l: MemberView[]) => l.map((x) => x.name).join(', ')
-  const row = (label: string, content: ReactNode, cls = '') => (
-    <div className="row between" style={{ padding: '9px 0', borderTop: '1px solid var(--line)', alignItems: 'flex-start' }}>
-      <span className="small" style={{ fontWeight: 700 }}>{label}</span>
-      <span className={`small ${cls}`} style={{ textAlign: 'right' }}>{content || <span className="muted">없음</span>}</span>
-    </div>
-  )
-  return (
-    <div className="card cream">
-      <div className="card-title"><Icon name="flag" size={20} /><h3>해산 매니저</h3><span className="tag y">주최자</span></div>
-      <p className="small muted" style={{ marginBottom: 12 }}>참여자 현황을 확인하고 마지막 한 사람까지 챙겨요.</p>
-      <div style={{ marginBottom: 14 }}>
-        {row('귀가 시작', names(onWay))}
-        {row('도착 완료', names(arrived))}
-        {row('혼자 귀가', soloList ? names(soloList) : <span className="muted">매칭 전</span>)}
-        {row('도착 확인 필요', names(needCheck), needCheck.length ? 'orange-t' : '')}
-        {row(
-          '막차 위험',
-          risky.map((o) => `${o.x.name}(${o.i!.slack < 0 ? '놓침' : o.i!.slack + '분'})`).join(', '),
-          risky.length ? 'orange-t' : '',
-        )}
-        {row('마지막 미도착', arrived.length && lastLeft.length ? names(lastLeft) : '', lastLeft.length && arrived.length ? 'orange-t' : '')}
-        {row('정보 미등록', names(unreg))}
-      </div>
-      <div className="stack">
-        <button className={`btn btn-block ${isPublic ? "btn-warn" : "btn-soft"}`} onClick={onToggleRecruit}>
-          {isPublic ? "모집 마감하기 (목록에서 내리기)" : "모집 중으로 다시 공개하기"}
-        </button>
-        {unreg.length > 0 && (
-          <button className="btn btn-warn btn-block" onClick={onNudge}>
-            <Icon name="bell" size={18} />미등록 {unreg.length}명에게 등록 요청
-          </button>
-        )}
-      </div>
     </div>
   )
 }

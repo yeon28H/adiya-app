@@ -369,3 +369,8 @@ body { overflow-x: hidden; }
 .meeting-join { margin-top: 12px; }
 .open-count { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 20px; margin-top: 22px; border-radius: var(--radius); background: #fff; border: 1px solid var(--yellow-300); box-shadow: var(--shadow-sm); text-decoration: none; color: var(--brown-900); }
 .open-count b { font-size: 26px; color: var(--orange-600); }
+
+/* ---------- 알림 버튼 ---------- */
+.bell-btn { position: relative; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--brown-900); cursor: pointer; box-shadow: var(--shadow-sm); }
+.bell-btn:hover { border-color: var(--yellow-400); }
+.bell-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--orange-500); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; border: 2px solid #fff; }

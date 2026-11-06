@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Navigate, Outlet, useParams } from 'react-router-dom'
 import * as api from '@/lib/api'
 import { lastTrainInfo, runMatching, travelMin } from '@/lib/matching'
+import { findStation } from '@/lib/stations'
 import { setLastMeeting } from '@/lib/session'
 import { distanceMeters } from '@/lib/geo'
 import type { ChatMessage, GroupView, MeetingView, MemberView, PlanB, Privacy } from '@/types'
@@ -36,8 +37,8 @@ export interface MeetingCtx {
   arrive: () => Promise<void>
   /** "잘 가고 있어요" 응답 (본인) */
   respond: () => Promise<void>
-  setNear: (near: boolean) => Promise<void>
-  simulateOverdue: () => Promise<void>
+  /** "아직 도착 안 했어요" — 목적지 근처 도착 알림을 잠시 끈다 */
+  dismissNear: () => Promise<void>
   register: (info: RegisterInfo) => Promise<void>
   applyRecommendedTime: () => Promise<void>
   rematch: () => Promise<void>
@@ -168,6 +169,38 @@ export function MeetingRoute() {
     return () => navigator.geolocation.clearWatch(watch)
   }, [meetingId, sharing, reload])
 
+  /* ---------- 내가 설정한 목적지에 도착하면 알림 ("도착 완료로 처리할까요?") ---------- */
+  const nearDismissedAt = useRef(0)
+  const moving = !!me && (me.status === 'started' || me.status === 'together')
+  const destKey = me?.dest ?? ''
+  const nearAlready = !!me?.nearDest
+  const myName = me?.name ?? ''
+  useEffect(() => {
+    if (!meetingId || !moving || nearAlready || !('geolocation' in navigator)) return
+    const dest = findStation(destKey)
+    if (!dest) return
+    let fired = false
+    const watch = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (fired || Date.now() - nearDismissedAt.current < 10 * 60000) return
+        const d = distanceMeters({ lat: pos.coords.latitude, lng: pos.coords.longitude }, dest)
+        // 역 좌표 오차와 GPS 오차를 감안해 300m 이내면 도착으로 본다
+        if (d > 300) return
+        fired = true
+        void api
+          .updateMe(meetingId, { nearDest: true })
+          .then(() => api.addNotice(meetingId, `${myName}님이 목적지(${dest.key}) 근처에 도착한 것 같아요. 본인 확인을 기다리고 있어요.`))
+          .then(() => reload())
+          .catch(() => {
+            fired = false
+          })
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+    )
+    return () => navigator.geolocation.clearWatch(watch)
+  }, [meetingId, moving, nearAlready, destKey, myName, reload])
+
   // 마지막 모임 기억 (상단 메뉴용)
   useEffect(() => {
     if (state && me) setLastMeeting({ code: state.mt.code, name: state.mt.name })
@@ -222,17 +255,10 @@ export function MeetingRoute() {
           })
           await notice(`${me.name}님이 "잘 가고 있어요"라고 응답했어요.`, null, 'ok')
         }),
-      setNear: (near) =>
+      dismissNear: () =>
         done(async () => {
-          await api.updateMe(mt.id, { nearDest: near })
-          if (near) await notice(`${me.name}님이 목적지 근처에 도착한 것 같아요. 본인 확인을 기다리고 있어요.`)
-        }),
-      simulateOverdue: () =>
-        done(async () => {
-          // 누르는 횟수에 따라 1단계 → 2단계 (시연용)
-          const etaAt = me.checkStage < 1 ? Date.now() - 1000 : Date.now() - (GRACE_MIN * 60000 + 1000)
-          await api.updateMe(mt.id, { etaAt })
-          await tickSelf(mt, { ...me, etaAt })
+          nearDismissedAt.current = Date.now()
+          await api.updateMe(mt.id, { nearDest: false })
         }),
       register: (info) => done(() => api.registerInfo(mt.id, info)),
       applyRecommendedTime: () =>

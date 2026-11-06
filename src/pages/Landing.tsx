@@ -45,10 +45,14 @@ export default function Landing() {
             <p className="lead">
               모임이 끝난 뒤 비슷한 방향으로 가는 사람들을 연결하고, 마지막 한 사람이 도착할 때까지 귀가 과정을 함께 챙겨요.
             </p>
-            <div className="hero-cta" style={{ marginTop: 28 }}>
+            <div className="hero-cta" style={{ marginTop: 28, display: "grid", gap: 12 }}>
               <Link className="btn btn-primary btn-lg btn-block" to="/create">
                 <Icon name="plus" />
                 모임 만들기
+              </Link>
+              <Link className="btn btn-soft btn-lg btn-block" to="/join">
+                <Icon name="key" />
+                초대 코드 입력
               </Link>
             </div>
             <Link className="open-count" to="/meetings" style={{ marginTop: 32 }}>
@@ -60,10 +64,6 @@ export default function Landing() {
                 모집 중인 모임 보기 <Icon name="arrow" size={18} />
               </span>
             </Link>
-            <p className="hero-note">
-              <Icon name="clock" size={18} />
-              <span>친구에게 초대 코드를 받았다면 <Link to="/join" style={{ fontWeight: 700 }}>코드로 참여하기</Link></span>
-            </p>
           </div>
           <div className="phone" aria-hidden="true">
             <div className="bar" />
@@ -183,9 +183,6 @@ export default function Landing() {
           <div className="cta-band">
             <h2>오늘 모임, 같이 가는 길까지 챙겨요</h2>
             <p>혼자 귀가하는 사람이 없도록. 마지막 한 사람까지.</p>
-            <div className="row wrap" style={{ justifyContent: 'center' }}>
-              <Link className="btn btn-soft btn-lg" to="/join">초대 코드 입력</Link>
-            </div>
           </div>
         </div>
       </section>

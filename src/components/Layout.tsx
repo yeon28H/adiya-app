@@ -1,21 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { getLastMeeting, setLastMeeting } from '@/lib/session'
-import Icon, { BrandMark } from './Icon'
+import { useEffect, useRef } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { BrandMark } from './Icon'
 import { StationDatalist } from './StationPicker'
 import { ToastProvider } from './Toast'
 
 export default function Layout() {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const scroller = useRef<HTMLDivElement>(null)
-  const [last, setLast] = useState(getLastMeeting)
-
-  useEffect(() => {
-    const sync = () => setLast(getLastMeeting())
-    window.addEventListener('eodiya-session', sync)
-    return () => window.removeEventListener('eodiya-session', sync)
-  }, [])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -26,35 +17,13 @@ export default function Layout() {
     <ToastProvider>
       <div id="device">
         <div id="scroller" ref={scroller}>
+          {/* 오른쪽 상단에는 아무 메뉴도 두지 않는다 */}
           <header className="topbar">
             <div className="container">
               <Link className="brand" to="/" aria-label="어디야? 처음으로">
                 <BrandMark />
                 어디야?
               </Link>
-              <nav className="nav" id="nav" aria-label="주 메뉴">
-                {last ? (
-                  <>
-                    <Link className="who" to={`/m/${last.code}`}>
-                      <Icon name="users" size={16} />
-                      <span className="who-t">{last.name}</span>
-                    </Link>
-                    <button
-                      aria-label="모임에서 나가기"
-                      onClick={() => {
-                        setLastMeeting(null)
-                        navigate('/')
-                      }}
-                    >
-                      나가기
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/meetings">모집 중인 모임</Link>
-                  </>
-                )}
-              </nav>
             </div>
           </header>
 
