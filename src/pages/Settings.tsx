@@ -43,17 +43,17 @@ export default function Settings() {
       <div className="card" style={{ marginTop: 16 }}>
         <label className="switch">
           <span>
-            <span className="t">귀가 도중 위치 공유 중단</span>
+            <span className="t">귀가 중 위치 공유</span>
             <br />
-            <span className="small muted">켜면 동행자에게 귀가 상태만 보여요.</span>
+            <span className="small muted">켜면 귀가하는 동안 내 위치를 동행자에게 공유해요. 끄면 귀가 상태만 보여요.</span>
           </span>
           <span className="toggle">
             <input
               type="checkbox"
-              checked={me.shareStopped}
+              checked={!me.shareStopped}
               onChange={(e) =>
-                void setSetting({ shareStopped: e.target.checked }).then(() =>
-                  toast(e.target.checked ? '위치 공유를 중단했어요' : '위치 공유를 다시 시작했어요'),
+                void setSetting({ shareStopped: !e.target.checked }).then(() =>
+                  toast(e.target.checked ? '위치 공유를 시작했어요' : '위치 공유를 중단했어요'),
                 )
               }
             />
