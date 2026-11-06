@@ -256,6 +256,8 @@ export default function Dashboard() {
         <div>
           <div className="name-progress">
             <h2>{mt.name}</h2>
+            {/* 진행 막대·채팅·알림은 한 묶음으로 두어, 좁은 화면에서도 따로 떨어져 내려가지 않게 한다 */}
+            <div className="name-actions">
             <button
               type="button"
               className="progress-btn"
@@ -286,6 +288,7 @@ export default function Dashboard() {
               <Icon name="bell" size={18} />
               {unseen > 0 && <span className="bell-badge">{unseen > 9 ? '9+' : unseen}</span>}
             </button>
+            </div>
           </div>
           <div className="meta">
             {(mt.fromLine || mt.toLine) && <span className="chip"><Icon name="train" size={16} />{routeText(mt)}</span>}
