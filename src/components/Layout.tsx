@@ -51,11 +51,8 @@ export default function Layout() {
                   </>
                 ) : (
                   <>
-                    <Link className="hide-sm" to="/nearby">
-                      주변 찾기
-                    </Link>
-                    <Link className="hide-sm" to="/join">
-                      모임 참여
+                    <Link className="hide-sm" to="/meetings">
+                      모집 중인 모임
                     </Link>
                     <Link to="/create">모임 만들기</Link>
                   </>

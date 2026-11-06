@@ -349,3 +349,23 @@ body { overflow-x: hidden; }
 .chat-bubble-wrap time { font-size: 11px; color: var(--gray-500); white-space: nowrap; }
 .chat-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); background: #fff; }
 .chat-input input { flex: 1; min-width: 0; }
+
+/* ---------- 모임명 옆 귀가 진행 막대 ---------- */
+.name-progress { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.progress-btn { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--brown-900); font: inherit; cursor: pointer; box-shadow: var(--shadow-sm); }
+.progress-btn:hover { border-color: var(--yellow-400); }
+.progress-bar { position: relative; width: 120px; height: 10px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.progress-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, var(--yellow-400), var(--green-500)); transition: width .6s ease; }
+.progress-text { font-weight: 800; font-size: 14px; }
+.progress-caret { font-size: 10px; color: var(--gray-500); }
+.status-detail { margin-top: 14px; max-width: 520px; }
+
+/* ---------- 모집 중인 모임 카드 ---------- */
+.meeting-card { display: block; width: 100%; text-align: left; margin-bottom: 12px; cursor: pointer; font: inherit; color: inherit; border: 1px solid var(--line); transition: border-color .15s, transform .15s; }
+.meeting-card:hover { border-color: var(--yellow-400); transform: translateY(-1px); }
+.meeting-card:disabled { opacity: .6; cursor: wait; }
+.meeting-name { font-size: 18px; font-weight: 800; }
+.meeting-route { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; padding: 3px 10px; border-radius: 999px; background: var(--yellow-100); font-weight: 800; color: var(--brown-700); }
+.meeting-join { margin-top: 12px; }
+.open-count { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 20px; margin-top: 22px; border-radius: var(--radius); background: #fff; border: 1px solid var(--yellow-300); box-shadow: var(--shadow-sm); text-decoration: none; color: var(--brown-900); }
+.open-count b { font-size: 26px; color: var(--orange-600); }

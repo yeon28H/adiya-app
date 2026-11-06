@@ -86,6 +86,12 @@ export interface MeetingView {
   hostUserId: string
   matchedAt: number | null
   matchStale: boolean
+  /** 모집 중으로 공개돼 모르는 사람도 목록에서 참여할 수 있는지 */
+  isPublic: boolean
+  fromLine: string | null
+  toLine: string | null
+  destStation: string | null
+  destArea: string | null
   members: MemberView[]
   groups: GroupView[] | null // 매칭 전이면 null
   soloIds: string[]

@@ -85,6 +85,11 @@ export async function createMeeting(input: {
   endTime: string
   capacity: number
   hostName: string
+  isPublic?: boolean
+  fromLine?: string | null
+  toLine?: string | null
+  destStation?: string | null
+  destArea?: string | null
 }): Promise<string> {
   await ensureSession()
   const station = findStation(input.place)
@@ -95,6 +100,11 @@ export async function createMeeting(input: {
     p_end_time: input.endTime,
     p_capacity: input.capacity,
     p_host_name: input.hostName,
+    p_is_public: input.isPublic ?? false,
+    p_from_line: input.fromLine ?? null,
+    p_to_line: input.toLine ?? null,
+    p_dest_station: input.destStation ?? null,
+    p_dest_area: input.destArea ?? null,
   })
   if (error) throw fail(error.message)
   return data as string // 초대 코드
@@ -178,6 +188,11 @@ export async function fetchMeeting(code: string): Promise<MeetingState | null> {
     hostUserId: m.host_user_id,
     matchedAt: ms(m.matched_at),
     matchStale: m.match_stale,
+    isPublic: m.is_public,
+    fromLine: m.from_line,
+    toLine: m.to_line,
+    destStation: m.dest_station,
+    destArea: m.dest_area,
     members,
     groups,
     soloIds,
@@ -526,4 +541,65 @@ export function subscribeInvites(onChange: () => void): () => void {
   return () => {
     void supabase.removeChannel(channel)
   }
+}
+
+/* ---------- 모집 중인 모임 ---------- */
+
+export interface OpenMeeting {
+  id: string
+  name: string
+  place: string
+  fromLine: string | null
+  toLine: string | null
+  destStation: string | null
+  destArea: string | null
+  endTime: string
+  capacity: number
+  memberCount: number
+  hostName: string | null
+  createdAt: number
+  /** 내가 이미 참여 중인지 */
+  joined: boolean
+}
+
+/** 현재 모집 중인 모임 수 (로그인 전에도 조회 가능) */
+export async function countOpenMeetings(): Promise<number> {
+  const { data, error } = await supabase.rpc("count_open_meetings")
+  if (error) throw error
+  return (data as number) ?? 0
+}
+
+export async function listOpenMeetings(): Promise<OpenMeeting[]> {
+  await ensureSession()
+  const { data, error } = await supabase.rpc("list_open_meetings")
+  if (error) throw error
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id,
+    name: r.name,
+    place: r.place,
+    fromLine: r.from_line,
+    toLine: r.to_line,
+    destStation: r.dest_station,
+    destArea: r.dest_area,
+    endTime: hhmm(r.end_time),
+    capacity: r.capacity,
+    memberCount: r.member_count,
+    hostName: r.host_name,
+    createdAt: new Date(r.created_at).getTime(),
+    joined: r.joined,
+  }))
+}
+
+/** 목록에서 바로 참여. 반환: 모임 코드 */
+export async function joinPublicMeeting(meetingId: string, name: string): Promise<string> {
+  await ensureSession()
+  const { data, error } = await supabase.rpc("join_public_meeting", { p_meeting_id: meetingId, p_name: name })
+  if (error) throw fail(error.message)
+  return data as string
+}
+
+/** 모집 열기/마감 (주최자만) */
+export async function setRecruiting(meetingId: string, open: boolean): Promise<void> {
+  const { error } = await supabase.from("meetings").update({ is_public: open }).eq("id", meetingId)
+  if (error) throw fail(error.message)
 }

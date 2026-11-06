@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
-import { Avatar, Badge, destView, fmtClock, Shell, STATUS } from '@/components/ui'
+import { Avatar, Badge, destView, fmtClock, routeText, Shell, STATUS } from '@/components/ui'
 import { buddyOf, groupOf, isHost, useMeeting } from '@/hooks/useMeeting'
-import { prettyCode } from '@/lib/api'
+import { prettyCode, setRecruiting } from '@/lib/api'
 import { lastTrainInfo, travelMin } from '@/lib/matching'
 import type { MeetingView, MemberView } from '@/types'
 
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const ctx = useMeeting()
   const { mt, me } = ctx
   const toast = useToast()
+  const [showDetail, setShowDetail] = useState(false)
   const act = (fn: () => Promise<unknown>, msg?: string) => () => void fn().then(() => msg && toast(msg))
 
   const byId = (id: string) => mt.members.find((x) => x.id === id)
@@ -32,14 +33,12 @@ export default function Dashboard() {
   const unreg = mt.members.filter((x) => !x.registered)
   const arrived = regd.filter((x) => x.status === 'arrived')
   const onWay = regd.filter((x) => ['started', 'together', 'check'].includes(x.status))
-  const before = mt.members.length - arrived.length - onWay.length
   const needCheck = regd.filter((x) => x.status === 'check')
   const allDone = mt.members.length >= 2 && mt.members.every((x) => x.registered && x.status === 'arrived')
   const soloList = mt.groups ? regd.filter((x) => !groupOf(mt, x.id) || x.groupDecision === 'declined') : null
   const host = isHost(mt, me)
   const mine = groupOf(mt, me.id)
   const pct = mt.members.length ? Math.round((arrived.length / mt.members.length) * 100) : 0
-  const step = !me.registered ? 2 : !mt.groups || (mine && !me.groupDecision) ? 3 : 4
 
   /* ---------- 내 카드 ---------- */
   let mineCard: ReactNode
@@ -248,14 +247,49 @@ export default function Dashboard() {
     <Shell narrow={false}>
       <div className="page-head row between wrap">
         <div>
-          <div className="muted small" style={{ fontWeight: 700 }}>{step === 4 ? '귀가 현황' : '모임 홈'}</div>
-          <h2>{mt.name}</h2>
+          <div className="name-progress">
+            <h2>{mt.name}</h2>
+            <button
+              type="button"
+              className="progress-btn"
+              onClick={() => setShowDetail((s) => !s)}
+              aria-expanded={showDetail}
+              aria-label={`귀가 현황 ${arrived.length}/${mt.members.length}명 도착, 눌러서 자세히 보기`}
+            >
+              <span className="progress-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                <i style={{ width: `${pct}%` }} />
+              </span>
+              <span className="progress-text">{arrived.length}/{mt.members.length}</span>
+              <span className="progress-caret" aria-hidden="true">{showDetail ? '▲' : '▼'}</span>
+            </button>
+          </div>
           <div className="meta">
+            {(mt.fromLine || mt.toLine) && <span className="chip"><Icon name="train" size={16} />{routeText(mt)}</span>}
             <span className="chip"><Icon name="pin" size={16} />{mt.place}</span>
             {mt.endTime && <span className="chip"><Icon name="clock" size={16} />{mt.endTime} 해산</span>}
             <span className="chip"><Icon name="users" size={16} />{mt.members.length}/{mt.capacity}명</span>
             <span className="chip"><Icon name="key" size={16} />{prettyCode(mt.code)}</span>
           </div>
+          {showDetail && (
+            <div className="card status-detail">
+              <div className="row between"><h3>전체 귀가 현황</h3><b>{arrived.length}/{mt.members.length}명 도착</b></div>
+              {([
+                ["아직 귀가 전", regd.filter((x) => x.status === "ready")],
+                ["귀가 중", regd.filter((x) => ["started", "together"].includes(x.status))],
+                ["도착 완료", arrived],
+                ["확인 필요", needCheck],
+                ["혼자 귀가", soloList ?? []],
+                ["정보 미등록", unreg],
+              ] as [string, MemberView[]][]).map(([label, list]) => (
+                <div key={label} className="row between" style={{ padding: "9px 0", borderTop: "1px solid var(--line)", alignItems: "flex-start" }}>
+                  <span className="small" style={{ fontWeight: 700 }}>{label} <span className="muted">({list.length})</span></span>
+                  <span className="small" style={{ textAlign: "right" }}>
+                    {list.length ? list.map((x) => x.name).join(", ") : <span className="muted">없음</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <button
           className="btn btn-soft btn-sm"
@@ -312,25 +346,6 @@ export default function Dashboard() {
         </div>
 
         <aside className="side">
-          <div className="card">
-            <div className="row between"><h3>전체 귀가 현황</h3><b>{arrived.length}/{mt.members.length}</b></div>
-            <div className="progress" style={{ margin: '12px 0 16px' }} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-              <i style={{ width: `${pct}%` }} />
-            </div>
-            <div className="stats" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              <div className="stat"><div className="n">{before}</div><div className="l">아직 귀가 전</div></div>
-              <div className="stat y"><div className="n">{onWay.length}</div><div className="l">귀가 중</div></div>
-              <div className="stat ok"><div className="n">{arrived.length}</div><div className="l">도착 완료</div></div>
-              <div className="stat warn"><div className="n">{soloList ? soloList.length : '–'}</div><div className="l">혼자 귀가</div></div>
-            </div>
-            {needCheck.length > 0 && (
-              <p className="small" style={{ marginTop: 12, color: 'var(--orange-600)', fontWeight: 700 }}>
-                <Icon name="bell" size={14} /> 확인 필요: {needCheck.map((x) => x.name).join(', ')}
-              </p>
-            )}
-            {unreg.length > 0 && <p className="small muted" style={{ marginTop: 10 }}>정보 미등록 {unreg.length}명</p>}
-          </div>
-
           <LastTrainCard me={me} onApply={act(ctx.applyRecommendedTime)} />
 
           <div className="card">
@@ -375,6 +390,12 @@ export default function Dashboard() {
               unreg={unreg}
               soloList={soloList}
               onNudge={() => void ctx.nudge().then((c) => toast(`${c}명에게 등록을 요청했어요`))}
+              isPublic={mt.isPublic}
+              onToggleRecruit={() =>
+                void setRecruiting(mt.id, !mt.isPublic)
+                  .then(ctx.reload)
+                  .then(() => toast(mt.isPublic ? "모집을 마감했어요" : "모집 중으로 다시 공개했어요"))
+              }
             />
           )}
         </aside>
@@ -432,8 +453,10 @@ function HostManager(props: {
   unreg: MemberView[]
   soloList: MemberView[] | null
   onNudge: () => void
+  isPublic: boolean
+  onToggleRecruit: () => void
 }) {
-  const { regd, arrived, onWay, needCheck, unreg, soloList, onNudge } = props
+  const { regd, arrived, onWay, needCheck, unreg, soloList, onNudge, isPublic, onToggleRecruit } = props
   const risky = regd
     .filter((x) => x.status === 'ready')
     .map((x) => ({ x, i: lastTrainInfo(x) }))
@@ -464,6 +487,9 @@ function HostManager(props: {
         {row('정보 미등록', names(unreg))}
       </div>
       <div className="stack">
+        <button className={`btn btn-block ${isPublic ? "btn-warn" : "btn-soft"}`} onClick={onToggleRecruit}>
+          {isPublic ? "모집 마감하기 (목록에서 내리기)" : "모집 중으로 다시 공개하기"}
+        </button>
         {unreg.length > 0 && (
           <button className="btn btn-warn btn-block" onClick={onNudge}>
             <Icon name="bell" size={18} />미등록 {unreg.length}명에게 등록 요청

@@ -7,8 +7,8 @@ import Icon from './Icon'
 export const STATUS: Record<string, string> = {
   unregistered: '정보 미등록',
   ready: '귀가 준비 중',
-  started: '귀가 시작',
-  together: '동행 중',
+  started: '귀가 중',
+  together: '이동 중',
   arrived: '목적지 도착',
   check: '귀가 확인 필요',
 }
@@ -112,4 +112,12 @@ export function Loading({ error }: { error?: string | null }) {
       </div>
     </Shell>
   )
+}
+
+/** "2호선 → 7호선 방향" (같은 호선이면 "2호선 방향") */
+export function routeText(m: { fromLine: string | null; toLine: string | null }) {
+  if (!m.fromLine && !m.toLine) return "방향 미정"
+  if (!m.toLine || m.fromLine === m.toLine) return `${m.fromLine ?? m.toLine} 방향`
+  if (!m.fromLine) return `${m.toLine} 방향`
+  return `${m.fromLine} → ${m.toLine} 방향`
 }

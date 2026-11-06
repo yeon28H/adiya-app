@@ -5,10 +5,12 @@ interface Props {
   /** 선택된 역의 key (예: '강남역'). 비어 있으면 미선택 */
   value: string
   onChange: (key: string) => void
+  /** 선택된 호선이 바뀔 때 알려준다 (예: 모임의 출발·도착 호선 표시용) */
+  onLineChange?: (line: string) => void
 }
 
 /** 1) 호선을 먼저 고르고 2) 그 호선의 역 목록에서 정확한 역을 고른다. 이름으로 바로 찾기도 가능. */
-export default function StationPicker({ value, onChange }: Props) {
+export default function StationPicker({ value, onChange, onLineChange }: Props) {
   const current = useMemo(() => findStation(value), [value])
   const [line, setLine] = useState(current?.lines[0] ?? '')
   const [query, setQuery] = useState('')
@@ -19,6 +21,11 @@ export default function StationPicker({ value, onChange }: Props) {
   }, [current, line])
 
   const lineInfo = LINES.find((l) => l.name === line)
+
+  useEffect(() => {
+    onLineChange?.(line)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [line])
 
   function search(v: string) {
     setQuery(v)

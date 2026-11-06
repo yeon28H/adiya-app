@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { Avatar } from '@/components/ui'
+import { countOpenMeetings } from '@/lib/api'
 
 const FEATURES: [string, string, string, string][] = [
   ['users', '', 'AI 귀가 동행 매칭', '귀가 방향·출발 시간·함께 갈 수 있는 구간을 점수로 계산해 비슷한 사람끼리 묶어요. 왜 묶였는지도 알려드려요.'],
@@ -19,6 +21,13 @@ const PROBLEMS = [
 ]
 
 export default function Landing() {
+  const [openCount, setOpenCount] = useState<number | null>(null)
+  useEffect(() => {
+    countOpenMeetings()
+      .then(setOpenCount)
+      .catch(() => setOpenCount(null))
+  }, [])
+
   return (
     <>
       <section className="hero">
@@ -36,30 +45,31 @@ export default function Landing() {
             <p className="lead">
               모임이 끝난 뒤 비슷한 방향으로 가는 사람들을 연결하고, 마지막 한 사람이 도착할 때까지 귀가 과정을 함께 챙겨요.
             </p>
+            <Link className="open-count" to="/meetings">
+              <span>
+                <span className="small muted" style={{ fontWeight: 700, display: "block" }}>지금 모집 중인 모임</span>
+                <b>{openCount === null ? "–" : openCount}</b> <span style={{ fontWeight: 700 }}>개</span>
+              </span>
+              <span className="btn btn-primary">
+                모집 중인 모임 보기 <Icon name="arrow" size={18} />
+              </span>
+            </Link>
             <div className="hero-cta">
-              <Link className="btn btn-primary btn-lg" to="/create">
+              <Link className="btn btn-soft btn-lg" to="/create">
                 <Icon name="plus" />
-                모임 만들기
-              </Link>
-              <Link className="btn btn-soft btn-lg" to="/join">
-                <Icon name="key" />
-                모임 참여하기
-              </Link>
-              <Link className="btn btn-soft btn-lg" to="/nearby">
-                <Icon name="pin" />
-                주변에서 같이 갈 사람 찾기
+                원하는 모임이 없다면 직접 만들기
               </Link>
             </div>
             <p className="hero-note">
               <Icon name="clock" size={18} />
-              <span>초대 코드를 받았다면 <b>모임 참여하기</b>에서 코드를 입력해 주세요.</span>
+              <span>친구에게 초대 코드를 받았다면 <Link to="/join" style={{ fontWeight: 700 }}>코드로 참여하기</Link></span>
             </p>
           </div>
           <div className="phone" aria-hidden="true">
             <div className="bar" />
             <div className="row between">
               <b>금요일 동기 모임</b>
-              <span className="badge st-together">동행 중</span>
+              <span className="badge st-together">이동 중</span>
             </div>
             <p className="small muted" style={{ margin: '4px 0 12px' }}>
               강남역 · 동행 그룹 1 · 함께 이동 약 22분
@@ -78,7 +88,7 @@ export default function Landing() {
                 <b>민준</b>
                 <div className="small muted">잠실역</div>
               </div>
-              <span className="badge st-together">동행 중</span>
+              <span className="badge st-together">이동 중</span>
             </div>
             <div className="mini-member">
               <Avatar name="서연" size={36} />
@@ -163,7 +173,7 @@ export default function Landing() {
           <div className="level-demo">
             <div className="level"><span className="tag y">1단계</span><div className="v">정확한 위치 공개</div><p className="small muted">잠실역</p></div>
             <div className="level"><span className="tag y">2단계 · 추천</span><div className="v">대략적인 지역만</div><p className="small muted">송파구 방면</p></div>
-            <div className="level"><span className="tag y">3단계</span><div className="v">귀가 상태만</div><p className="small muted">목적지 비공개 · 동행 중</p></div>
+            <div className="level"><span className="tag y">3단계</span><div className="v">귀가 상태만</div><p className="small muted">목적지 비공개 · 이동 중</p></div>
           </div>
         </div>
       </section>
