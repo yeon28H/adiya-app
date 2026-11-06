@@ -89,7 +89,7 @@ export async function createMeeting(input: {
   const { data, error } = await supabase.rpc('create_meeting', {
     p_name: input.name,
     p_place: input.place,
-    p_place_station: station?.n ?? '',
+    p_place_station: station?.key ?? '',
     p_end_time: input.endTime,
     p_capacity: input.capacity,
     p_host_name: input.hostName,

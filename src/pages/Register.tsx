@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
+import StationPicker from '@/components/StationPicker'
 import { Back, MODES, PRIVACY, Shell, Stepper } from '@/components/ui'
 import { useMeeting } from '@/hooks/useMeeting'
 import { fmtTime, nearestStation, toMin } from '@/lib/matching'
@@ -39,8 +40,8 @@ export default function Register() {
           setErrs((e) => ({ ...e, origin: '현재 위치 근처에 서비스 중인 역이 없어요. 역을 직접 입력해 주세요.' }))
           return
         }
-        setOrigin(near.station.n + '역')
-        setLocNote(`현재 위치에서 가장 가까운 ${near.station.n}역으로 설정했어요 (약 ${near.km.toFixed(1)}km)`)
+        setOrigin(near.station.key)
+        setLocNote(`현재 위치에서 가장 가까운 ${near.station.key}으로 설정했어요 (약 ${near.km.toFixed(1)}km)`)
       },
       (err) => {
         setLocating(false)
@@ -61,14 +62,14 @@ export default function Register() {
     const er: Record<string, string> = {}
     const o = findStation(origin)
     const d = findStation(dest)
-    if (!o) er.origin = '목록에 있는 역을 입력해 주세요.'
-    if (!d) er.dest = '목록에 있는 역을 입력해 주세요. 예: 잠실역'
+    if (!o) er.origin = '호선과 출발 역을 선택해 주세요.'
+    if (!d) er.dest = '호선과 목적지 역을 선택해 주세요.'
     if (!time) er.time = '출발 시간을 선택해 주세요.'
     setErrs(er)
     if (Object.keys(er).length || !o || !d) return
     setBusy(true)
     try {
-      await register({ origin: o.n + '역', dest: d.n + '역', departTime: time, mode, privacy })
+      await register({ origin: o.key, dest: d.key, departTime: time, mode, privacy })
       toast('귀가 정보를 등록했어요')
       navigate(`/m/${mt.code}/match`)
     } catch (err) {
@@ -89,9 +90,15 @@ export default function Register() {
         </p>
       </div>
       <form className="card" onSubmit={onSubmit} noValidate>
-        <label className="field">
+        <div className="field">
           <span className="label">현재 출발 위치</span>
-          <input type="text" list="stations" value={origin} onChange={(e) => { setOrigin(e.target.value); setLocNote('') }} autoComplete="off" />
+          <StationPicker
+            value={origin}
+            onChange={(k) => {
+              setOrigin(k)
+              setLocNote('')
+            }}
+          />
           <button
             type="button"
             className="btn btn-soft btn-sm"
@@ -107,15 +114,15 @@ export default function Register() {
             <Icon name="lock" size={13} /> 좌표는 저장하지 않고, 가장 가까운 역 이름만 사용해요.
           </div>
           <div className="err">{errs.origin}</div>
-        </label>
-        <label className="field">
+        </div>
+        <div className="field">
           <span className="label">귀가 목적지 (가까운 역)</span>
-          <input type="text" list="stations" value={dest} onChange={(e) => setDest(e.target.value)} placeholder="예: 잠실역" autoComplete="off" />
+          <StationPicker value={dest} onChange={setDest} />
           <div className="hint">
             <Icon name="lock" size={13} /> 정확한 목적지는 본인만 볼 수 있어요. 다른 사람에게는 아래 공개 범위만큼만 보여요.
           </div>
           <div className="err">{errs.dest}</div>
-        </label>
+        </div>
         <label className="field">
           <span className="label">예상 출발 시간</span>
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />

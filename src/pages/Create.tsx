@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import StationPicker from '@/components/StationPicker'
 import { Back, Shell } from '@/components/ui'
 import { createMeeting } from '@/lib/api'
 import { findStation } from '@/lib/stations'
@@ -19,7 +20,7 @@ export default function Create() {
     const er: Record<string, string> = {}
     if (!host.trim()) er.host = '이름을 입력해 주세요.'
     if (!name.trim()) er.name = '모임 이름을 입력해 주세요.'
-    if (!findStation(place)) er.place = '목록에 있는 역을 입력해 주세요. 예: 강남역'
+    if (!findStation(place)) er.place = '호선과 역을 선택해 주세요.'
     if (!end) er.end = '해산 시간을 선택해 주세요.'
     setErrs(er)
     if (Object.keys(er).length) return
@@ -58,12 +59,12 @@ export default function Create() {
           <input type="text" maxLength={24} placeholder="예: 금요일 동기 모임" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="err">{errs.name}</div>
         </label>
-        <label className="field">
+        <div className="field">
           <span className="label">모임 장소 (가까운 역)</span>
-          <input type="text" list="stations" placeholder="예: 강남역" autoComplete="off" value={place} onChange={(e) => setPlace(e.target.value)} />
-          <div className="hint">목록에서 가까운 역을 골라 주세요. 모든 귀가 방향 계산의 출발점이 돼요.</div>
+          <StationPicker value={place} onChange={setPlace} />
+          <div className="hint">호선을 고른 뒤 가까운 역을 선택해 주세요. 모든 귀가 방향 계산의 출발점이 돼요.</div>
           <div className="err">{errs.place}</div>
-        </label>
+        </div>
         <div className="grid2">
           <label className="field">
             <span className="label">예상 해산 시간</span>

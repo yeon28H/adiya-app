@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { STATIONS } from '@/lib/stations'
 import { getLastMeeting, setLastMeeting } from '@/lib/session'
 import Icon, { BrandMark } from './Icon'
+import { StationDatalist } from './StationPicker'
 import { ToastProvider } from './Toast'
 
 export default function Layout() {
@@ -68,17 +68,13 @@ export default function Layout() {
           <footer className="footer">
             <div className="container row between wrap">
               <span>어디야? · 함께 가고, 무사히 도착하고.</span>
-              <span>귀가 동행 서비스 · 베타</span>
+              <span>귀가 동행 서비스 · 베타 · 역 데이터 © OpenStreetMap contributors</span>
             </div>
           </footer>
         </div>
       </div>
 
-      <datalist id="stations">
-        {STATIONS.map((s) => (
-          <option key={s.n} value={`${s.n}역`} />
-        ))}
-      </datalist>
+      <StationDatalist />
     </ToastProvider>
   )
 }
