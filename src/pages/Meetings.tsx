@@ -68,7 +68,7 @@ export default function Meetings() {
         </Link>
       </div>
 
-      <label className="field">
+      <label className="field" style={{ marginBottom: 36 }}>
         <span className="label">내 닉네임 (모임 사람들에게 보여요)</span>
         <input id="nick" type="text" maxLength={12} placeholder="예: 지은" autoComplete="nickname" value={nick} onChange={(e) => setNick(e.target.value)} />
       </label>

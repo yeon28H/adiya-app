@@ -51,10 +51,7 @@ export default function Layout() {
                   </>
                 ) : (
                   <>
-                    <Link className="hide-sm" to="/meetings">
-                      모집 중인 모임
-                    </Link>
-                    <Link to="/create">모임 만들기</Link>
+                    <Link to="/meetings">모집 중인 모임</Link>
                   </>
                 )}
               </nav>
