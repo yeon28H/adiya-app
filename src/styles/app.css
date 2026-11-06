@@ -417,3 +417,11 @@ body { overflow-x: hidden; }
 .route-pair .hint { font-size: 13px; color: var(--gray-500); line-height: 1.5; }
 .route-pair .err { font-size: 13.5px; color: var(--orange-600); margin-top: 6px; font-weight: 600; }
 .route-pair + .grid2, .route-pair + .field { margin-top: 20px; }
+
+/* ---------- 이번 수정: 제목 가운데 정렬 / 예시 라벨 / 귀가 현황 라벨 / 코드 복사 칩 ---------- */
+.route-pair > .label { text-align: center; }
+.example-label { display: inline-block; margin-bottom: 10px; padding: 3px 10px; border-radius: 999px; background: var(--yellow-100); color: var(--orange-600); font-size: 12.5px; font-weight: 800; }
+.progress-label { flex: none; font-weight: 800; font-size: 14px; white-space: nowrap; }
+.status-title .badge { font-size: 16px; padding: 6px 14px; }
+.meta button.chip-btn { cursor: pointer; font-family: inherit; border: 1px dashed var(--yellow-500); background: var(--yellow-100); }
+.meta button.chip-btn:hover { background: var(--yellow-300); }

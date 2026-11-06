@@ -85,7 +85,6 @@ export default function Match() {
               {isMine && <span className="tag y">내 추천 그룹</span>}
               {g.pairMode && <span className="tag">2인 동행</span>}
             </div>
-            <div className="small muted">{gm.length}명이 함께 귀가해요</div>
           </div>
         </div>
         <div className="meta">
@@ -94,14 +93,19 @@ export default function Match() {
           <span className="chip"><Icon name="clock" size={16} />출발 시간 차 {g.spread}분</span>
           <span className="chip"><Icon name="pin" size={16} />추천 분기 지점 {g.splitStation}역</span>
         </div>
-        <ul className="reasons">
-          {g.reasons.map((r) => (
-            <li key={r}>
-              <Icon name="check" size={16} />
-              <span>{r}</span>
-            </li>
-          ))}
-        </ul>
+        {/* 설명은 "몇 분 동안 함께 이동할 수 있는지"만 보여준다 */}
+        {g.reasons.some((r) => r.includes("동안 함께 이동")) && (
+          <ul className="reasons">
+            {g.reasons
+              .filter((r) => r.includes("동안 함께 이동"))
+              .map((r) => (
+                <li key={r}>
+                  <Icon name="check" size={16} />
+                  <span>{r}</span>
+                </li>
+              ))}
+          </ul>
+        )}
         <hr className="divider" />
         {gm.map((x) => (
           <div key={x.id} className="member">

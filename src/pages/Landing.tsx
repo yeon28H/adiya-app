@@ -95,6 +95,7 @@ export default function Landing() {
           </div>
           <div className="phone" aria-hidden="true">
             <div className="bar" />
+            <div className="example-label">예시 화면</div>
             <div className="row between">
               <b>금요일 동기 모임</b>
               <span className="badge st-together">이동 중</span>

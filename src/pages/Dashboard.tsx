@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
-import { Avatar, Badge, destView, fmtClock, routeText, Shell, STATUS } from '@/components/ui'
+import { Avatar, Badge, destView, fmtClock, routeText, Shell } from '@/components/ui'
 import { buddyOf, groupOf, isHost, useMeeting } from '@/hooks/useMeeting'
 import { prettyCode, setRecruiting } from '@/lib/api'
 import { lastTrainInfo, travelMin } from '@/lib/matching'
@@ -106,9 +106,9 @@ export default function Dashboard() {
   } else {
     mineCard = (
       <div className="card yellow stack">
-        <div className="row between wrap">
-          <div className="card-title" style={{ margin: 0 }}><Icon name="route" size={24} /><h3>{STATUS[me.status]}</h3></div>
-          <Badge x={me} />
+        <div className="card-title" style={{ margin: 0 }}>
+          <Icon name="route" size={24} />
+          <span className="status-title"><Badge x={me} /></span>
         </div>
         <p className="small">
           {mine && me.status === 'together'
@@ -270,6 +270,7 @@ export default function Dashboard() {
               aria-expanded={showDetail}
               aria-label={`귀가 현황 ${arrived.length}/${mt.members.length}명 도착, 눌러서 자세히 보기`}
             >
+              <span className="progress-label">귀가 현황</span>
               <span className="progress-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
                 <i style={{ width: `${pct}%` }} />
               </span>
@@ -296,7 +297,14 @@ export default function Dashboard() {
             <span className="chip"><Icon name="pin" size={16} />{mt.place}</span>
             {mt.endTime && <span className="chip"><Icon name="clock" size={16} />{mt.endTime} 해산</span>}
             <span className="chip"><Icon name="users" size={16} />{mt.members.length}/{mt.capacity}명</span>
-            <span className="chip"><Icon name="key" size={16} />{prettyCode(mt.code)}</span>
+            <button
+              type="button"
+              className="chip chip-btn"
+              onClick={() => void navigator.clipboard.writeText(prettyCode(mt.code)).then(() => toast("초대 코드를 복사했어요"))}
+              aria-label={`초대 코드 ${prettyCode(mt.code)} 복사`}
+            >
+              <Icon name="key" size={16} />{prettyCode(mt.code)}<Icon name="copy" size={14} />
+            </button>
           </div>
           {showNotices && (
             <div className="card status-detail">
@@ -334,12 +342,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <button
-          className="btn btn-soft btn-sm"
-          onClick={() => void navigator.clipboard.writeText(prettyCode(mt.code)).then(() => toast('복사했어요'))}
-        >
-          <Icon name="copy" size={16} />초대 코드 복사
-        </button>
       </div>
 
       {allDone && (
