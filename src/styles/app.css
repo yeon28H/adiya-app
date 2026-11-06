@@ -389,8 +389,8 @@ body { overflow-x: hidden; }
 .suggest button:hover, .suggest button:focus-visible { background: var(--yellow-100); outline: 0; }
 .suggest-empty { padding: 10px 12px; color: var(--gray-500); font-size: 14px; }
 
-/* ---------- 기본값 안내 (눈에 띄게) ---------- */
-.default-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--yellow-100); border: 1px solid var(--yellow-400); color: var(--brown-900); font-size: 15px; line-height: 1.5; }
-.default-note svg { flex: none; margin-top: 2px; color: var(--orange-600); }
-.default-note b { color: var(--orange-600); }
+/* ---------- 기본값 안내 (주황색 글자만) ---------- */
+.default-note { margin: 0 0 10px; color: var(--orange-600); font-size: 14.5px; line-height: 1.5; }
+
+/* ---------- 모임 상단 진행 막대·채팅·알림 묶음 ---------- */
 .name-actions { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: 8px; }

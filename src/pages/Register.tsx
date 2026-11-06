@@ -58,14 +58,9 @@ export default function Register() {
       <form className="card" onSubmit={onSubmit} noValidate>
         <div className="field">
           <span className="label">출발역</span>
-          <div className="default-note" role="note" style={{ marginTop: 0, marginBottom: 12 }}>
-            <Icon name="pin" size={18} />
-            <span>
-              출발역은 <b>모임 장소{mt.placeStation || mt.place ? `(${mt.placeStation || mt.place})` : ""}</b>로 <b>이미 선택돼 있어요.</b>
-              <br />
-              다른 역에서 출발할 때만 바꿔 주세요.
-            </span>
-          </div>
+          <p className="default-note">
+            출발역은 모임 장소{mt.placeStation || mt.place ? `(${mt.placeStation || mt.place})` : ""}로 이미 선택돼 있어요. 다른 역에서 출발할 때만 바꿔 주세요.
+          </p>
           <StationPicker value={origin} onChange={setOrigin} />
           <div className="err">{errs.origin}</div>
         </div>
