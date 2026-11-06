@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
 import { Avatar, Badge, destView, fmtClock, routeText, Shell, STATUS } from '@/components/ui'
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const ctx = useMeeting()
   const { mt, me } = ctx
   const toast = useToast()
+  const navigate = useNavigate()
   const [showDetail, setShowDetail] = useState(false)
   const [showNotices, setShowNotices] = useState(false)
   const seenKey = `eodiya.noticeseen.${mt.id}`
@@ -348,8 +349,25 @@ export default function Dashboard() {
           <p className="muted" style={{ marginTop: 8 }}>
             {mt.members.length}명 전원이 귀가를 마쳤어요.
             <br />
-            마지막 도착: <b>{lastArrived.name}</b>님 · {lastArrived.arrivedAt ? fmtClock(lastArrived.arrivedAt) : ''}
+            마지막 도착: <b>{lastArrived.name}</b>님 · {lastArrived.arrivedAt ? fmtClock(lastArrived.arrivedAt) : ""}
           </p>
+          <button
+            className="btn btn-primary btn-lg btn-block"
+            style={{ marginTop: 18 }}
+            onClick={() => {
+              const ok = window.confirm('모두 도착했어요. 모임을 끝내고 나갈까요?\n나가면 이 모임의 참여 목록과 위치 공유에서 빠져요.')
+              if (!ok) return
+              void ctx
+                .leaveMeeting()
+                .then(() => {
+                  toast("모임을 끝냈어요. 수고했어요!")
+                  navigate("/")
+                })
+                .catch((e: Error) => toast(e.message))
+            }}
+          >
+            모임 끝내기
+          </button>
         </div>
       )}
       {mt.matchStale && (

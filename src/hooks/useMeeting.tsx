@@ -55,6 +55,8 @@ export interface MeetingCtx {
   unread: number
   sendChat: (body: string) => Promise<void>
   markChatRead: () => void
+  /** 모임에서 나간다(참여 정보 삭제). 모두 도착한 뒤 "모임 끝내기"에도 쓴다. */
+  leaveMeeting: () => Promise<void>
 }
 
 const Ctx = createContext<MeetingCtx | null>(null)
@@ -301,6 +303,10 @@ export function MeetingRoute() {
       unread,
       sendChat: (body) => api.sendMessage(mt.id, body),
       markChatRead,
+      leaveMeeting: async () => {
+        await api.leaveMeeting(mt.id)
+        setLastMeeting(null)
+      },
     }
   }, [state, me, reload, messages, unread, markChatRead])
 
