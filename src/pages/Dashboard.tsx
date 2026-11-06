@@ -253,11 +253,12 @@ export default function Dashboard() {
   return (
     <Shell narrow={false}>
       <div className="page-head row between wrap">
-        <div>
+        <div style={{ flex: "1 1 320px", minWidth: 0 }}>
           <div className="name-progress">
             <h2>{mt.name}</h2>
-            {/* 진행 막대·채팅·알림은 한 묶음으로 두어, 좁은 화면에서도 따로 떨어져 내려가지 않게 한다 */}
-            <div className="name-actions">
+          </div>
+          {/* 진행 막대·채팅·알림은 모임명 아래 한 줄에 고정한다. 막대가 남는 폭을 채우므로 아이콘이 아래로 떨어지지 않는다 */}
+          <div className="name-actions">
             <button
               type="button"
               className="progress-btn"
@@ -288,7 +289,6 @@ export default function Dashboard() {
               <Icon name="bell" size={18} />
               {unseen > 0 && <span className="bell-badge">{unseen > 9 ? '9+' : unseen}</span>}
             </button>
-            </div>
           </div>
           <div className="meta">
             {(mt.fromLine || mt.toLine) && <span className="chip"><Icon name="train" size={16} />{routeText(mt)}</span>}

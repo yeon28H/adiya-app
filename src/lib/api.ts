@@ -609,3 +609,37 @@ export async function leaveMeeting(meetingId: string): Promise<void> {
   const { error } = await supabase.rpc("leave_meeting", { p_meeting_id: meetingId })
   if (error) throw fail(error.message)
 }
+
+/* ---------- 내가 참여 중인 모임 ---------- */
+
+export interface JoinedMeeting {
+  code: string
+  name: string
+  fromLine: string | null
+  toLine: string | null
+  place: string
+  memberCount: number
+  createdAt: number
+}
+
+/** 내가 참여한 최근 모임(2일 이내). 로그인 기록이 없으면 새로 만들지 않고 빈 목록을 돌려준다. */
+export async function listJoinedMeetings(): Promise<JoinedMeeting[]> {
+  const { data: sess } = await supabase.auth.getSession()
+  if (!sess.session) return []
+  const { data, error } = await supabase
+    .from("meetings")
+    .select("code,name,from_line,to_line,place,created_at,members(count)")
+    .gt("created_at", new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(10)
+  if (error) throw error
+  return ((data ?? []) as Row[]).map((m) => ({
+    code: m.code,
+    name: m.name,
+    fromLine: m.from_line,
+    toLine: m.to_line,
+    place: m.place,
+    memberCount: m.members?.[0]?.count ?? 1,
+    createdAt: new Date(m.created_at).getTime(),
+  }))
+}

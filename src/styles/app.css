@@ -352,9 +352,9 @@ body { overflow-x: hidden; }
 
 /* ---------- 모임명 옆 귀가 진행 막대 ---------- */
 .name-progress { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
-.progress-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--brown-900); font: inherit; cursor: pointer; box-shadow: var(--shadow-sm); }
+.progress-btn { display: flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--brown-900); font: inherit; cursor: pointer; box-shadow: var(--shadow-sm); }
 .progress-btn:hover { border-color: var(--yellow-400); }
-.progress-bar { position: relative; width: 64px; height: 10px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.progress-bar { position: relative; flex: 1 1 auto; min-width: 56px; height: 10px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
 .progress-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, var(--yellow-400), var(--green-500)); transition: width .6s ease; }
 .progress-text { font-weight: 800; font-size: 14px; }
 .progress-caret { font-size: 10px; color: var(--gray-500); }
@@ -393,4 +393,6 @@ body { overflow-x: hidden; }
 .default-note { margin: 0 0 10px; color: var(--orange-600); font-size: 14.5px; line-height: 1.5; }
 
 /* ---------- 모임 상단 진행 막대·채팅·알림 묶음 ---------- */
-.name-actions { display: inline-flex; align-items: center; flex-wrap: nowrap; gap: 8px; }
+.name-actions { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%; max-width: 480px; margin-top: 10px; }
+.name-actions .bell-btn { flex: none; }
+.name-actions .progress-text, .name-actions .progress-caret { flex: none; }

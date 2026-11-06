@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
-import { Avatar } from '@/components/ui'
-import { countOpenMeetings } from '@/lib/api'
+import { Avatar, routeText } from '@/components/ui'
+import { countOpenMeetings, listJoinedMeetings, type JoinedMeeting } from '@/lib/api'
 
 const FEATURES: [string, string, string, string][] = [
-  ['users', '', 'AI 귀가 동행 매칭', '귀가 방향·출발 시간·함께 갈 수 있는 구간을 점수로 계산해 비슷한 사람끼리 묶어요. 왜 묶였는지도 알려드려요.'],
+  ['users', '', 'AI 귀가 동행 매칭', '귀가 방향·출발 시간·함께 갈 수 있는 구간을 비교해 비슷한 사람끼리 묶어요. 왜 묶였는지도 알려드려요.'],
   ['flag', '', '마지막 사람까지 확인', '그룹별 귀가 상태를 한눈에 보고, 마지막 미도착 인원까지 도착 완료로 이어져요.'],
   ['shield', 'g', '목적지 비공개 동행', '정확한 집 주소를 알리지 않아도 돼요. 지역 단위, 상태만 공개 중에서 직접 고르세요.'],
   ['pin', '', '안전한 분기 지점 추천', '집 앞까지 갈 필요 없어요. 밝고 사람 많은 역·정류장에서 안전하게 헤어질 지점을 추천해요.'],
@@ -21,10 +21,15 @@ const PROBLEMS = [
 
 export default function Landing() {
   const [openCount, setOpenCount] = useState<number | null>(null)
+  const [joined, setJoined] = useState<JoinedMeeting[]>([])
   useEffect(() => {
     countOpenMeetings()
       .then(setOpenCount)
       .catch(() => setOpenCount(null))
+    // 앱을 나갔다 다시 들어와도 내가 참여 중인 모임으로 돌아갈 수 있게
+    listJoinedMeetings()
+      .then(setJoined)
+      .catch(() => setJoined([]))
   }, [])
 
   return (
@@ -54,6 +59,30 @@ export default function Landing() {
                 초대 코드 입력
               </Link>
             </div>
+            {joined.length > 0 && (
+              <div style={{ marginTop: 28 }}>
+                <div className="small muted" style={{ fontWeight: 800, marginBottom: 8 }}>내가 참여 중인 모임</div>
+                <div className="stack" style={{ gap: 10 }}>
+                  {joined.map((m) => (
+                    <Link key={m.code} to={`/m/${m.code}`} className="card meeting-card" style={{ marginBottom: 0 }}>
+                      <div className="row between wrap" style={{ alignItems: "flex-start" }}>
+                        <div>
+                          <div className="meeting-name">{m.name}</div>
+                          {(m.fromLine || m.toLine) && (
+                            <div className="meeting-route">
+                              <Icon name="train" size={16} />
+                              {routeText(m)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="tag y">{m.memberCount}명</span>
+                      </div>
+                      <div className="small muted" style={{ marginTop: 6 }}>{m.place} 출발 · 눌러서 들어가기</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
             <Link className="open-count" to="/meetings" style={{ marginTop: 32 }}>
               <span>
                 <span className="small muted" style={{ fontWeight: 700, display: "block" }}>지금 모집 중인 모임</span>

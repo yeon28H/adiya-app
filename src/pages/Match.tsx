@@ -87,10 +87,6 @@ export default function Match() {
             </div>
             <div className="small muted">{gm.length}명이 함께 귀가해요</div>
           </div>
-          <div className="score">
-            <b>{g.score}</b>
-            <span>매칭 점수</span>
-          </div>
         </div>
         <div className="meta">
           <span className="chip"><Icon name="users" size={16} />{gm.length}명</span>
@@ -153,7 +149,7 @@ export default function Match() {
       <div className="page-head row between wrap">
         <div>
           <h2>동행 매칭 결과</h2>
-          <p>방향·출발 시간·함께 이동할 수 있는 구간을 점수로 계산해 추천했어요.</p>
+          <p>방향·출발 시간·함께 이동할 수 있는 구간을 비교해 추천했어요.</p>
         </div>
       </div>
       {started && (
