@@ -44,14 +44,25 @@ export default function Match() {
           <p className="muted">
             귀가 정보를 등록한 참여자가 2명 이상이어야 매칭할 수 있어요. 초대 코드 <b>{prettyCode(mt.code)}</b>를 친구에게 보내 주세요.
           </p>
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              void navigator.clipboard.writeText(prettyCode(mt.code)).then(() => toast('복사했어요'))
-            }}
-          >
-            <Icon name="copy" size={18} />초대 코드 복사
-          </button>
+          <div className="row wrap" style={{ justifyContent: "center" }}>
+            <button
+              className="btn btn-soft"
+              onClick={() => {
+                void navigator.clipboard.writeText(prettyCode(mt.code)).then(() => toast("초대 코드를 복사했어요"))
+              }}
+            >
+              <Icon name="copy" size={18} />초대 코드 복사
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                const link = `${location.origin}${location.pathname}#/join/${mt.code}`
+                void navigator.clipboard.writeText(link).then(() => toast("초대 링크를 복사했어요"))
+              }}
+            >
+              <Icon name="copy" size={18} />초대 링크 복사
+            </button>
+          </div>
         </div>
       </Shell>
     )
