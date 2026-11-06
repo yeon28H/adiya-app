@@ -116,7 +116,6 @@ export default function Dashboard() {
         </p>
         <div className="row wrap">
           <button className="btn btn-ok btn-lg" onClick={act(ctx.arrive, '도착을 확인했어요')}><Icon name="check" size={18} />도착 완료</button>
-          <Link className="btn btn-soft btn-lg" to={`/m/${mt.code}/planb`}><Icon name="swap" size={18} />귀가 플랜 B</Link>
         </div>
       </div>
     )
@@ -188,7 +187,6 @@ export default function Dashboard() {
             {x.userId === m.hostUserId && <> <span className="tag">주최자</span></>}
             {x.shareStopped && <> <span className="tag o">공유 중단</span></>}
             {x.groupDecision === 'declined' && <> <span className="tag">혼자 귀가</span></>}
-            {x.planB && <span className="tag o">플랜 B · {x.planB.title}</span>}
           </div>
           <div className="sub">
             {destView(me, x)}
@@ -274,6 +272,10 @@ export default function Dashboard() {
               <span className="progress-text">{arrived.length}/{mt.members.length}</span>
               <span className="progress-caret" aria-hidden="true">{showDetail ? '▲' : '▼'}</span>
             </button>
+            <Link className="bell-btn" to={`/m/${mt.code}/chat`} aria-label={`모임 채팅${ctx.unread > 0 ? ` 안 읽은 메시지 ${ctx.unread}개` : ""}`}>
+              <Icon name="chat" size={18} />
+              {ctx.unread > 0 && <span className="bell-badge">{ctx.unread > 9 ? "9+" : ctx.unread}</span>}
+            </Link>
             <button
               type="button"
               className="bell-btn"
@@ -359,6 +361,11 @@ export default function Dashboard() {
       <div className="layout-2">
         <div className="stack">
           {mineCard}
+          <div className="card yellow stack">
+            <div className="card-title" style={{ margin: 0 }}><Icon name="pin" size={20} /><h3>어디까지 왔는지 확인</h3></div>
+            <p className="small">귀가 중인 사람의 실시간 위치를 지도로 확인해요.</p>
+            <Link className="btn btn-primary btn-block" to={`/m/${mt.code}/live`}><Icon name="pin" size={18} />실시간 위치 지도</Link>
+          </div>
           {!mt.groups && (
             <div className="card empty">
               <p>아직 동행 매칭 전이에요.</p>
@@ -385,20 +392,10 @@ export default function Dashboard() {
         <aside className="side">
           <LastTrainCard me={me} onApply={act(ctx.applyRecommendedTime)} />
 
-          <div className="card yellow stack">
-            <div className="card-title" style={{ margin: 0 }}><Icon name="pin" size={20} /><h3>어디까지 왔는지 확인</h3></div>
-            <p className="small">귀가 중인 사람의 실시간 위치를 지도로 보고, 채팅으로 바로 물어볼 수 있어요.</p>
-            <Link className="btn btn-primary btn-block" to={`/m/${mt.code}/live`}><Icon name="pin" size={18} />실시간 위치 지도</Link>
-            <Link className="btn btn-soft btn-block" to={`/m/${mt.code}/chat`}>
-              <Icon name="bell" size={18} />모임 채팅{ctx.unread > 0 && <span className="tag o" style={{ marginLeft: 6 }}>{ctx.unread > 99 ? "99+" : ctx.unread}</span>}
-            </Link>
-          </div>
-
           <div className="card">
             <div className="card-title"><Icon name="shield" size={20} /><h3>내 설정</h3></div>
             <div className="stack">
               <Link className="btn btn-ghost btn-block" to={`/m/${mt.code}/settings`}>위치 공개·도착 알림 설정</Link>
-              <Link className="btn btn-soft btn-block" to={`/m/${mt.code}/planb`}>귀가 플랜 B</Link>
               {me.registered && <Link className="btn btn-ghost btn-block" to={`/m/${mt.code}/register`}>귀가 정보 수정</Link>}
             </div>
           </div>
@@ -435,7 +432,7 @@ function LastTrainCard({ me, onApply }: { me: MemberView; onApply: () => void })
   const [cls, label] = LEVEL[info.level]
   const msg =
     info.level === 'danger'
-      ? `출발 예정(${me.departTime})이 막차보다 늦어요. 지금 출발하거나 플랜 B를 확인하세요.`
+      ? `출발 예정(${me.departTime})이 막차보다 늦어요. 지금 바로 출발하는 걸 권장해요.`
       : info.level === 'warn'
         ? `막차까지 ${info.slack}분 남았어요. 서두르는 걸 권장해요.`
         : `막차까지 ${info.slack}분 여유가 있어요.`

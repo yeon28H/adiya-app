@@ -12,7 +12,6 @@ import Landing from '@/pages/Landing'
 import Nearby from '@/pages/Nearby'
 import Meetings from '@/pages/Meetings'
 import Match from '@/pages/Match'
-import PlanB from '@/pages/PlanB'
 import Register from '@/pages/Register'
 import Settings from '@/pages/Settings'
 
@@ -35,7 +34,6 @@ export default function App() {
           <Route path="register" element={<Register />} />
           <Route path="match" element={<Match />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="planb" element={<PlanB />} />
           <Route
             path="live"
             element={

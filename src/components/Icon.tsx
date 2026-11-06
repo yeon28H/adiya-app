@@ -23,6 +23,8 @@ const P: Record<string, string> = {
   walk: '<circle cx="13" cy="5" r="2"/><path d="M12 8.5l-2.5 4 3 2.5V21M12 8.5l3.5 3 2.5.5M9.5 12.5L7 15"/>',
   train: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4M9 14.2v.1M15 14.2v.1"/>',
   refresh: '<path d="M20 11a8 8 0 0 0-14.5-3.5M4 4v4h4M4 13a8 8 0 0 0 14.5 3.5M20 20v-4h-4"/>',
+  chat: '<path d="M4 5h16v11H9.5L4 20.5V5z"/><path d="M8 9.5h8M8 12.5h5"/>',
+  send: '<path d="M21 3L10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5 21 3z"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 }
 

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
 import { Back, fmtClock, Shell } from '@/components/ui'
@@ -37,16 +36,6 @@ export default function Chat() {
   return (
     <Shell>
       <Back to={`/m/${mt.code}`}>{mt.name}</Back>
-      <div className="page-head row between wrap">
-        <div>
-          <h2>모임 채팅</h2>
-          <p>{mt.members.length}명이 함께 쓰는 채팅이에요. 지금 어디쯤인지 서로 물어보세요.</p>
-        </div>
-        <Link className="btn btn-soft btn-sm" to={`/m/${mt.code}/live`}>
-          <Icon name="pin" size={16} />위치 보기
-        </Link>
-      </div>
-
       <div className="chat">
         <div className="chat-list" role="log" aria-live="polite">
           {messages.length === 0 && <p className="small muted center" style={{ margin: 'auto' }}>아직 메시지가 없어요. 첫 인사를 남겨 보세요 👋</p>}
@@ -80,8 +69,8 @@ export default function Chat() {
             autoComplete="off"
             aria-label="메시지 입력"
           />
-          <button className="btn btn-primary" type="submit" disabled={busy || !text.trim()}>
-            보내기
+          <button className="btn btn-primary chat-send" type="submit" disabled={busy || !text.trim()} aria-label="보내기" title="보내기">
+            <Icon name="send" size={20} />
           </button>
         </form>
       </div>

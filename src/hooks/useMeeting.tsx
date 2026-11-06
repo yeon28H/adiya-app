@@ -5,7 +5,7 @@ import { lastTrainInfo, runMatching, travelMin } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
 import { setLastMeeting } from '@/lib/session'
 import { distanceMeters } from '@/lib/geo'
-import type { ChatMessage, GroupView, MeetingView, MemberView, PlanB, Privacy } from '@/types'
+import type { ChatMessage, GroupView, MeetingView, MemberView, Privacy } from '@/types'
 import { Loading, NotFound } from '@/components/ui'
 
 const GRACE_MIN = 5
@@ -44,7 +44,6 @@ export interface MeetingCtx {
   rematch: () => Promise<void>
   decide: (join: boolean) => Promise<void>
   setSetting: (patch: api.MePatch) => Promise<void>
-  applyPlanB: (plan: PlanB | null, text: string, groupId: string | null) => Promise<void>
   nudge: () => Promise<number>
   requestCheck: (memberId: string) => Promise<void>
   resolveCheck: (memberId: string, action: 'ok' | 'arrived') => Promise<void>
@@ -288,11 +287,6 @@ export function MeetingRoute() {
           }
         }),
       setSetting: (patch) => done(() => api.updateMe(mt.id, patch)),
-      applyPlanB: (plan, text, groupId) =>
-        done(async () => {
-          if (plan) await api.updateMe(mt.id, { planB: plan })
-          if (text) await notice(text, groupId, 'warn')
-        }),
       nudge: async () => {
         const names = mt.members.filter((x) => !x.registered).map((x) => x.name)
         if (names.length) await notice(`${names.join(', ')}님, 귀가 정보를 등록하면 동행을 찾아드려요. (주최자 요청)`)
@@ -351,7 +345,7 @@ async function tickSelf(mt: MeetingView, me: MemberView): Promise<boolean> {
       await api.addNotice(
         mt.id,
         info.level === 'danger'
-          ? `${me.name}님은 출발 예정(${me.departTime})이 막차(${info.last})보다 늦어요. 지금 출발하거나 플랜 B를 확인하세요.`
+          ? `${me.name}님은 출발 예정(${me.departTime})이 막차(${info.last})보다 늦어요. 지금 바로 출발하는 걸 권장해요.`
           : `${me.name}님은 막차(${info.last})까지 여유가 ${info.slack}분뿐이에요. ${info.recommended}까지는 출발하는 걸 권장해요.`,
         null,
         'warn',
