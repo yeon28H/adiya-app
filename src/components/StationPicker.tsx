@@ -7,6 +7,8 @@ interface Props {
   onChange: (key: string) => void
   /** 선택된 호선이 바뀔 때 알려준다 (예: 모임의 출발·도착 호선 표시용) */
   onLineChange?: (line: string) => void
+  /** 좁은 열(출발→도착 나란히 배치)에서 안내 문구를 짧게 */
+  compact?: boolean
 }
 
 const collator = new Intl.Collator('ko')
@@ -23,7 +25,7 @@ function searchStations(query: string): Station[] {
 }
 
 /** 1) 호선을 먼저 고르고 2) 그 호선의 역 목록에서 정확한 역을 고른다. 이름으로 직접 찾기도 가능. */
-export default function StationPicker({ value, onChange, onLineChange }: Props) {
+export default function StationPicker({ value, onChange, onLineChange, compact = false }: Props) {
   const current = useMemo(() => findStation(value), [value])
   const [line, setLine] = useState(current?.lines[0] ?? '')
   const [query, setQuery] = useState('')
@@ -66,7 +68,7 @@ export default function StationPicker({ value, onChange, onLineChange }: Props) 
         }}
       >
         <option value="" disabled>
-          ① 호선을 먼저 선택하세요
+          {compact ? '① 호선 선택' : '① 호선을 먼저 선택하세요'}
         </option>
         {REGIONS.map((r) => (
           <optgroup key={r} label={r}>
@@ -85,7 +87,7 @@ export default function StationPicker({ value, onChange, onLineChange }: Props) 
         disabled={!lineInfo}
       >
         <option value="" disabled>
-          {lineInfo ? `② ${lineInfo.name}의 역을 선택하세요` : '② 호선을 먼저 선택해 주세요'}
+          {lineInfo ? (compact ? '② 역 선택' : `② ${lineInfo.name}의 역을 선택하세요`) : compact ? '② 역 선택' : '② 호선을 먼저 선택해 주세요'}
         </option>
         {lineInfo?.stations.map((s) => (
           <option key={s.key} value={s.key}>
@@ -112,7 +114,7 @@ export default function StationPicker({ value, onChange, onLineChange }: Props) 
               if (results[0]) pick(results[0])
             }
           }}
-          placeholder="역 이름으로 바로 찾기 (예: 잠실)"
+          placeholder={compact ? '역 이름 검색' : '역 이름으로 바로 찾기 (예: 잠실)'}
           autoComplete="off"
           aria-label="역 이름으로 검색"
         />

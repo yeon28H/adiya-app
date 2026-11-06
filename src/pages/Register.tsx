@@ -57,22 +57,25 @@ export default function Register() {
         </p>
       </div>
       <form className="card" onSubmit={onSubmit} noValidate>
-        <div className="field">
+        <div className="route-pair">
           <span className="label">출발역</span>
-          <p className="default-note">
+          <span />
+          <span className="label">목적지</span>
+          <p className="default-note route-note">
             출발역은 모임 장소{mt.placeStation || mt.place ? `(${mt.placeStation || mt.place})` : ""}로 이미 선택돼 있어요. 다른 역에서 출발할 때만 바꿔 주세요.
           </p>
-          <StationPicker value={origin} onChange={setOrigin} />
-          <div className="err">{errs.origin}</div>
-        </div>
-
-        <div className="field">
-          <span className="label">귀가 목적지 (가까운 역)</span>
-          <StationPicker value={dest} onChange={setDest} />
-          <div className="hint">
+          <div>
+            <StationPicker compact value={origin} onChange={setOrigin} />
+            <div className="err">{errs.origin}</div>
+          </div>
+          <span className="route-arrow" aria-hidden="true">→</span>
+          <div>
+            <StationPicker compact value={dest} onChange={setDest} />
+            <div className="err">{errs.dest}</div>
+          </div>
+          <div className="hint route-note">
             <Icon name="lock" size={13} /> 정확한 목적지는 본인만 볼 수 있어요. 다른 사람에게는 아래 공개 범위만큼만 보여요.
           </div>
-          <div className="err">{errs.dest}</div>
         </div>
 
         <label className="field">
