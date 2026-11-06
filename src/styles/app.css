@@ -425,3 +425,11 @@ body { overflow-x: hidden; }
 .status-title .badge { font-size: 16px; padding: 6px 14px; }
 .meta button.chip-btn { cursor: pointer; font-family: inherit; border: 1px dashed var(--yellow-500); background: var(--yellow-100); }
 .meta button.chip-btn:hover { background: var(--yellow-300); }
+
+/* ---------- 지도 위 표시 이미지(병아리) ---------- */
+.map-pin-img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #fff; background: #fff; box-shadow: 0 2px 8px rgba(58, 42, 27, .4); -webkit-user-drag: none; user-select: none; }
+.map-pin-img.me { border-color: var(--brown-900); }
+.map-pin-img.place { border-color: var(--orange-500); }
+.leaflet-tooltip.pin-label { background: rgba(255, 255, 255, .95); border: 1px solid var(--line); border-radius: 8px; color: var(--brown-900); font-size: 12px; font-weight: 800; padding: 2px 8px; box-shadow: var(--shadow-sm); white-space: nowrap; }
+.leaflet-tooltip.pin-label.place { color: var(--orange-600); }
+.leaflet-tooltip.pin-label::before { display: none; }

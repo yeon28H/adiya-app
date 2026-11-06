@@ -11,19 +11,20 @@ import { nearestStation } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
 import type { MemberView } from '@/types'
 
-const pinIcon = (name: string, mine: boolean) =>
+// 지도 위 표시 이미지: 모임 장소 = /pins/place.webp(adiyaA), 나머지(참여자) = /pins/member.webp(adiyaB)
+const pinIcon = (mine: boolean) =>
   L.divIcon({
     className: '',
-    html: `<div class="map-pin${mine ? ' me' : ''}">${name.slice(0, 1)}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
+    html: `<img class="map-pin-img${mine ? ' me' : ''}" src="/pins/member.webp" alt="" draggable="false" />`,
+    iconSize: [46, 46],
+    iconAnchor: [23, 23],
   })
 
 const placeIcon = L.divIcon({
   className: '',
-  html: '<div class="map-pin place">★</div>',
-  iconSize: [34, 34],
-  iconAnchor: [17, 17],
+  html: '<img class="map-pin-img place" src="/pins/place.webp" alt="" draggable="false" />',
+  iconSize: [56, 56],
+  iconAnchor: [28, 28],
 })
 
 export default function Live() {
@@ -78,13 +79,15 @@ export default function Live() {
     g.clearLayers()
     const pts: L.LatLngExpression[] = []
     if (place) {
-      L.marker([place.lat, place.lng], { icon: placeIcon, title: `모임 장소 ${place.key}` }).addTo(g)
+      L.marker([place.lat, place.lng], { icon: placeIcon, title: `모임 장소 ${place.key}` })
+        .bindTooltip(`모임 장소 · ${place.key}`, { permanent: true, direction: 'bottom', offset: [0, 26], className: 'pin-label place' })
+        .addTo(g)
       pts.push([place.lat, place.lng])
     }
     for (const { m: mem, loc } of visible) {
       const mine = mem.id === me.id
-      L.marker([loc.lat, loc.lng], { icon: pinIcon(mem.name, mine), title: mem.name })
-        .bindTooltip(`${mem.name}${mine ? ' (나)' : ''} · ${agoText(loc.updatedAt)}`)
+      L.marker([loc.lat, loc.lng], { icon: pinIcon(mine), title: mem.name })
+        .bindTooltip(`${mem.name}${mine ? ' (나)' : ''} · ${agoText(loc.updatedAt)}`, { permanent: true, direction: 'bottom', offset: [0, 22], className: 'pin-label' })
         .addTo(g)
       if (loc.accuracy && loc.accuracy < 300) {
         L.circle([loc.lat, loc.lng], { radius: loc.accuracy, color: '#F5B700', weight: 1, fillOpacity: 0.08 }).addTo(g)
