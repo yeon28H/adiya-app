@@ -102,9 +102,15 @@ export function MeetingRoute() {
     const poll = setInterval(() => {
       if (document.visibilityState === 'visible') void reload()
     }, 12000)
+    // 화면을 꺼 두었다가 다시 켰을 때(폰) 바로 최신 상태로 맞춘다
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void reload()
+    }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       clearTimeout(timer)
       clearInterval(poll)
+      document.removeEventListener('visibilitychange', onVisible)
       off()
     }
   }, [meetingId, reload])

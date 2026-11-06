@@ -372,7 +372,8 @@ export default function Dashboard() {
           </button>
         </div>
       )}
-      {mt.matchStale && (
+      {/* 모두 도착했거나 이미 귀가가 시작된 뒤에는 "다시 매칭" 안내를 보여주지 않는다 */}
+      {mt.matchStale && !allDone && !mt.members.some((x) => x.status !== 'ready') && (
         <div className="banner warn" style={{ marginBottom: 16 }}>
           <span className="ico"><Icon name="refresh" size={20} /></span>
           <div className="grow small">새로 등록·수정된 귀가 정보가 있어요. 다시 매칭하면 그룹이 갱신돼요.</div>
