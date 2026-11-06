@@ -54,12 +54,6 @@ export default function Landing() {
                 모집 중인 모임 보기 <Icon name="arrow" size={18} />
               </span>
             </Link>
-            <div className="hero-cta">
-              <Link className="btn btn-soft btn-lg" to="/create">
-                <Icon name="plus" />
-                원하는 모임이 없다면 직접 만들기
-              </Link>
-            </div>
             <p className="hero-note">
               <Icon name="clock" size={18} />
               <span>친구에게 초대 코드를 받았다면 <Link to="/join" style={{ fontWeight: 700 }}>코드로 참여하기</Link></span>
