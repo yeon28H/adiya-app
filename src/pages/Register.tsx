@@ -4,7 +4,7 @@ import Icon from '@/components/Icon'
 import StationPicker from '@/components/StationPicker'
 import { useToast } from '@/components/Toast'
 import { Back, MODES, PRIVACY, Shell, Stepper } from '@/components/ui'
-import { isHost, useMeeting } from '@/hooks/useMeeting'
+import { useMeeting } from '@/hooks/useMeeting'
 import { fmtTime, toMin } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
 import type { Privacy } from '@/types'
@@ -13,11 +13,7 @@ export default function Register() {
   const { mt, me, register } = useMeeting()
   const navigate = useNavigate()
   const toast = useToast()
-  // 모임장이 모임을 만들 때 정한 출발지가 기본값. 따로 출발하는 사람만 직접 고른다.
-  const hostStation = findStation(mt.placeStation) ?? findStation(mt.place)
-  const hostOrigin = hostStation?.key ?? ""
-  const [custom, setCustom] = useState(() => !hostStation || (me.registered && !!me.origin && me.origin !== hostOrigin))
-  const [origin, setOrigin] = useState(() => (me.registered && me.origin) || hostOrigin)
+  const [origin, setOrigin] = useState(me.origin || mt.placeStation || mt.place)
   const [dest, setDest] = useState(me.dest)
   const [time, setTime] = useState(
     me.departTime || fmtTime(mt.endTime ? toMin(mt.endTime) + 5 : new Date().getHours() * 60 + new Date().getMinutes() + 5),
@@ -30,7 +26,7 @@ export default function Register() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     const er: Record<string, string> = {}
-    const o = findStation(custom ? origin : hostOrigin)
+    const o = findStation(origin)
     const d = findStation(dest)
     if (!o) er.origin = '호선과 출발역을 선택해 주세요.'
     if (!d) er.dest = '호선과 목적지 역을 선택해 주세요.'
@@ -61,37 +57,16 @@ export default function Register() {
       </div>
       <form className="card" onSubmit={onSubmit} noValidate>
         <div className="field">
-          <span className="label">출발지</span>
-          {!custom ? (
-            <div className="card cream row between wrap" style={{ padding: 14 }}>
-              <div>
-                <div className="small muted" style={{ fontWeight: 700 }}>{isHost(mt, me) ? "모임 출발지" : "파티장이 정한 출발지"}</div>
-                <div style={{ fontWeight: 800, fontSize: 18 }}>
-                  <Icon name="pin" size={16} /> {hostOrigin}
-                </div>
-              </div>
-              <button type="button" className="btn btn-soft btn-sm" onClick={() => setCustom(true)}>
-                내 출발지 따로 선택하기
-              </button>
-            </div>
-          ) : (
-            <>
-              <StationPicker value={origin} onChange={setOrigin} />
-              {hostStation && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ marginTop: 10 }}
-                  onClick={() => {
-                    setCustom(false)
-                    setOrigin(hostOrigin)
-                  }}
-                >
-                  {isHost(mt, me) ? "모임 출발지로 되돌리기" : "파티장이 정한 출발지로 되돌리기"} ({hostOrigin})
-                </button>
-              )}
-            </>
-          )}
+          <span className="label">출발역</span>
+          <StationPicker value={origin} onChange={setOrigin} />
+          <div className="default-note" role="note">
+            <Icon name="pin" size={18} />
+            <span>
+              출발역은 <b>모임 장소{mt.placeStation || mt.place ? `(${mt.placeStation || mt.place})` : ""}</b>로 <b>이미 선택돼 있어요.</b>
+              <br />
+              다른 역에서 출발할 때만 바꿔 주세요.
+            </span>
+          </div>
           <div className="err">{errs.origin}</div>
         </div>
 

@@ -388,3 +388,8 @@ body { overflow-x: hidden; }
 .suggest button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-radius: 8px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .suggest button:hover, .suggest button:focus-visible { background: var(--yellow-100); outline: 0; }
 .suggest-empty { padding: 10px 12px; color: var(--gray-500); font-size: 14px; }
+
+/* ---------- 기본값 안내 (눈에 띄게) ---------- */
+.default-note { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--yellow-100); border: 1px solid var(--yellow-400); color: var(--brown-900); font-size: 15px; line-height: 1.5; }
+.default-note svg { flex: none; margin-top: 2px; color: var(--orange-600); }
+.default-note b { color: var(--orange-600); }
