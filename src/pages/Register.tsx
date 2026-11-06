@@ -4,7 +4,7 @@ import Icon from '@/components/Icon'
 import { useToast } from '@/components/Toast'
 import { Back, MODES, PRIVACY, Shell, Stepper } from '@/components/ui'
 import { useMeeting } from '@/hooks/useMeeting'
-import { fmtTime, toMin } from '@/lib/matching'
+import { fmtTime, nearestStation, toMin } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
 import type { Privacy } from '@/types'
 
@@ -19,6 +19,42 @@ export default function Register() {
   const [privacy, setPrivacy] = useState<Privacy>(me.privacy || 'area')
   const [errs, setErrs] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
+  const [locating, setLocating] = useState(false)
+  const [locNote, setLocNote] = useState('')
+
+  /** 현재 위치(GPS)에서 가장 가까운 역을 출발 위치로 채운다. 좌표는 저장하지 않고 역 이름만 사용한다. */
+  function locateMe() {
+    setErrs((e) => ({ ...e, origin: '' }))
+    setLocNote('')
+    if (!('geolocation' in navigator)) {
+      setErrs((e) => ({ ...e, origin: '이 기기는 위치 기능을 지원하지 않아요. 역을 직접 입력해 주세요.' }))
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false)
+        const near = nearestStation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        if (!near || near.km > 20) {
+          setErrs((e) => ({ ...e, origin: '현재 위치 근처에 서비스 중인 역이 없어요. 역을 직접 입력해 주세요.' }))
+          return
+        }
+        setOrigin(near.station.n + '역')
+        setLocNote(`현재 위치에서 가장 가까운 ${near.station.n}역으로 설정했어요 (약 ${near.km.toFixed(1)}km)`)
+      },
+      (err) => {
+        setLocating(false)
+        setErrs((e) => ({
+          ...e,
+          origin:
+            err.code === err.PERMISSION_DENIED
+              ? '위치 권한이 거부됐어요. 브라우저 설정에서 허용하거나 역을 직접 입력해 주세요.'
+              : '현재 위치를 가져오지 못했어요. 잠시 후 다시 시도하거나 역을 직접 입력해 주세요.',
+        }))
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    )
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,7 +91,21 @@ export default function Register() {
       <form className="card" onSubmit={onSubmit} noValidate>
         <label className="field">
           <span className="label">현재 출발 위치</span>
-          <input type="text" list="stations" value={origin} onChange={(e) => setOrigin(e.target.value)} autoComplete="off" />
+          <input type="text" list="stations" value={origin} onChange={(e) => { setOrigin(e.target.value); setLocNote('') }} autoComplete="off" />
+          <button
+            type="button"
+            className="btn btn-soft btn-sm"
+            style={{ marginTop: 8 }}
+            onClick={locateMe}
+            disabled={locating}
+          >
+            <Icon name="pin" size={16} />
+            {locating ? '위치 확인 중...' : '현재 위치로 설정'}
+          </button>
+          {locNote && <div className="hint">{locNote}</div>}
+          <div className="hint">
+            <Icon name="lock" size={13} /> 좌표는 저장하지 않고, 가장 가까운 역 이름만 사용해요.
+          </div>
           <div className="err">{errs.origin}</div>
         </label>
         <label className="field">

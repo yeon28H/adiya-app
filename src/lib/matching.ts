@@ -50,7 +50,17 @@ function meanBearing(list: number[]): number {
   return (deg(Math.atan2(y, x)) + 360) % 360
 }
 
-export const toMin = (t: string | null | undefined): number => {
+/** 좌표에서 가장 가까운 역과 거리(km). 역 목록이 비었으면 null */
+export function nearestStation(p: Point): { station: Station; km: number } | null {
+  let best: { station: Station; km: number } | null = null
+  for (const s of STATIONS) {
+    const d = km(p, s)
+    if (!best || d < best.km) best = { station: s, km: d }
+  }
+  return best
+}
+
+export const toMin =(t: string | null | undefined): number => {
   const [h, m] = String(t || '00:00').split(':').map(Number)
   return h * 60 + m
 }
