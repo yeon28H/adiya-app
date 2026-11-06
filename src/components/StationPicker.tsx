@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { findStation, LINES, REGIONS, STATIONS } from '@/lib/stations'
+import { findStation, LINES, REGIONS, STATIONS, type Station } from '@/lib/stations'
 
 interface Props {
   /** 선택된 역의 key (예: '강남역'). 비어 있으면 미선택 */
@@ -9,16 +9,35 @@ interface Props {
   onLineChange?: (line: string) => void
 }
 
-/** 1) 호선을 먼저 고르고 2) 그 호선의 역 목록에서 정확한 역을 고른다. 이름으로 바로 찾기도 가능. */
+const collator = new Intl.Collator('ko')
+
+/** 입력한 글자가 들어간 역을 찾는다. 이름이 입력으로 시작하는 역을 먼저, 나머지는 가나다순. */
+function searchStations(query: string): Station[] {
+  const q = query.trim().replace(/\s+/g, '')
+  if (!q) return []
+  const name = q.replace(/역$/, '') || q
+  const hit = STATIONS.filter((s) => s.key.includes(q) || s.n.includes(name))
+  return hit
+    .sort((a, b) => Number(b.n.startsWith(name)) - Number(a.n.startsWith(name)) || collator.compare(a.key, b.key))
+    .slice(0, 8)
+}
+
+/** 1) 호선을 먼저 고르고 2) 그 호선의 역 목록에서 정확한 역을 고른다. 이름으로 직접 찾기도 가능. */
 export default function StationPicker({ value, onChange, onLineChange }: Props) {
   const current = useMemo(() => findStation(value), [value])
   const [line, setLine] = useState(current?.lines[0] ?? '')
   const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
 
   // 값이 바깥(현재 위치, 이름 검색)에서 바뀌면 호선도 맞춰 준다. 이미 그 역을 지나는 호선이면 유지.
   useEffect(() => {
     if (current && !current.lines.includes(line)) setLine(current.lines[0])
   }, [current, line])
+
+  // 위쪽 선택칸 등 다른 곳에서 역이 바뀌면 검색칸은 비운다 (검색으로 고른 경우는 입력이 그대로 남는다)
+  useEffect(() => {
+    setQuery((q) => (q && q !== value ? '' : q))
+  }, [value])
 
   const lineInfo = LINES.find((l) => l.name === line)
 
@@ -27,18 +46,25 @@ export default function StationPicker({ value, onChange, onLineChange }: Props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [line])
 
-  function search(v: string) {
-    setQuery(v)
-    const s = findStation(v)
-    if (s) {
-      onChange(s.key)
-      setQuery('')
-    }
+  const results = useMemo(() => searchStations(query), [query])
+  const showList = open && query.trim() !== '' && query !== value
+
+  function pick(s: Station) {
+    setQuery(s.key)
+    setOpen(false)
+    onChange(s.key)
   }
 
   return (
     <div className="stack" style={{ gap: 8 }}>
-      <select aria-label="호선 선택" value={line} onChange={(e) => { setLine(e.target.value); onChange('') }}>
+      <select
+        aria-label="호선 선택"
+        value={line}
+        onChange={(e) => {
+          setLine(e.target.value)
+          onChange('')
+        }}
+      >
         <option value="" disabled>
           ① 호선을 먼저 선택하세요
         </option>
@@ -68,33 +94,48 @@ export default function StationPicker({ value, onChange, onLineChange }: Props) 
           </option>
         ))}
       </select>
-      <input
-        type="text"
-        list="stations"
-        value={query}
-        onChange={(e) => search(e.target.value)}
-        placeholder="역 이름으로 바로 찾기 (예: 잠실)"
-        autoComplete="off"
-        aria-label="역 이름으로 검색"
-      />
+
+      <div className="station-search">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setOpen(true)
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={(e) => {
+            // 폼 제출 대신, 첫 번째 검색 결과를 선택한다
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              if (results[0]) pick(results[0])
+            }
+          }}
+          placeholder="역 이름으로 바로 찾기 (예: 잠실)"
+          autoComplete="off"
+          aria-label="역 이름으로 검색"
+        />
+        {showList && (
+          <ul className="suggest" role="listbox">
+            {results.length === 0 && <li className="suggest-empty">일치하는 역이 없어요</li>}
+            {results.map((s) => (
+              <li key={s.key} role="option" aria-selected={s.key === value}>
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(s)}>
+                  <b>{s.key}</b>
+                  <span className="muted small">{s.lines.join(' · ')}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {current && (
         <div className="small" style={{ fontWeight: 700 }}>
           선택한 역: {current.key} <span className="muted">· {current.lines.join(' · ')}</span>
         </div>
       )}
     </div>
-  )
-}
-
-const SORTED_STATIONS = [...STATIONS].sort((a, b) => new Intl.Collator('ko').compare(a.key, b.key))
-
-/** 이름 검색용 datalist (페이지에 한 번만 렌더링) */
-export function StationDatalist() {
-  return (
-    <datalist id="stations">
-      {SORTED_STATIONS.map((s) => (
-        <option key={s.key} value={s.key} />
-      ))}
-    </datalist>
   )
 }

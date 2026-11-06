@@ -1,15 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { getLastMeeting, setLastMeeting } from '@/lib/session'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { BrandMark } from './Icon'
-import { StationDatalist } from './StationPicker'
 import { ToastProvider } from './Toast'
 
 export default function Layout() {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const scroller = useRef<HTMLDivElement>(null)
-  const inMeeting = pathname.startsWith('/m/')
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -40,25 +36,8 @@ export default function Layout() {
               <span>귀가 동행 서비스 · 베타 · 역 데이터 © OpenStreetMap contributors</span>
             </div>
           </footer>
-
-          {/* 모임 화면 맨 아래의 작은 나가기 (홈으로 나가요. 모임 참여 상태는 그대로예요) */}
-          {inMeeting && getLastMeeting() && (
-            <div className="leave-row">
-              <button
-                className="leave-btn"
-                onClick={() => {
-                  setLastMeeting(null)
-                  navigate('/')
-                }}
-              >
-                나가기
-              </button>
-            </div>
-          )}
         </div>
       </div>
-
-      <StationDatalist />
     </ToastProvider>
   )
 }

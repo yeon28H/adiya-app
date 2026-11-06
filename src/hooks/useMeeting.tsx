@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate, Outlet, useParams } from 'react-router-dom'
+import { Navigate, Outlet, useNavigate, useParams } from 'react-router-dom'
 import * as api from '@/lib/api'
 import { lastTrainInfo, runMatching, travelMin } from '@/lib/matching'
 import { findStation } from '@/lib/stations'
@@ -7,6 +7,7 @@ import { setLastMeeting } from '@/lib/session'
 import { distanceMeters } from '@/lib/geo'
 import type { ChatMessage, GroupView, MeetingView, MemberView, Privacy } from '@/types'
 import { Loading, NotFound } from '@/components/ui'
+import { useToast } from '@/components/Toast'
 
 const GRACE_MIN = 5
 
@@ -329,6 +330,7 @@ export function MeetingRoute() {
   return (
     <Ctx.Provider value={value}>
       <Outlet />
+      <LeaveButton meetingId={value.mt.id} />
     </Ctx.Provider>
   )
 }
@@ -382,4 +384,34 @@ function mergeMessages(a: ChatMessage[], b: ChatMessage[]): ChatMessage[] {
   const map = new Map<string, ChatMessage>()
   for (const m of [...a, ...b]) map.set(m.id, m)
   return [...map.values()].sort((x, y) => x.ts - y.ts)
+}
+
+/** 모임 화면 맨 아래의 작은 나가기 버튼 */
+function LeaveButton({ meetingId }: { meetingId: string }) {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [busy, setBusy] = useState(false)
+
+  async function leave() {
+    const ok = window.confirm('이 모임에서 나갈까요?\n나가면 참여 목록과 위치 공유에서 빠지고, 다시 참여하려면 목록에서 새로 들어와야 해요.')
+    if (!ok) return
+    setBusy(true)
+    try {
+      await api.leaveMeeting(meetingId)
+      setLastMeeting(null)
+      toast("모임에서 나갔어요")
+      navigate("/")
+    } catch (e) {
+      toast((e as Error).message)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="leave-row">
+      <button className="leave-btn" onClick={() => void leave()} disabled={busy}>
+        {busy ? "나가는 중..." : "나가기"}
+      </button>
+    </div>
+  )
 }

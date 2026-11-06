@@ -603,3 +603,9 @@ export async function setRecruiting(meetingId: string, open: boolean): Promise<v
   const { error } = await supabase.from("meetings").update({ is_public: open }).eq("id", meetingId)
   if (error) throw fail(error.message)
 }
+
+/** 모임 나가기: 내 참여 정보를 지우고 빠진다 (주최자가 나가면 다음 멤버가 주최자가 됨) */
+export async function leaveMeeting(meetingId: string): Promise<void> {
+  const { error } = await supabase.rpc("leave_meeting", { p_meeting_id: meetingId })
+  if (error) throw fail(error.message)
+}
