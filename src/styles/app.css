@@ -376,7 +376,7 @@ body { overflow-x: hidden; }
 .bell-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--orange-500); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; border: 2px solid #fff; }
 
 /* ---------- 채팅 전송 버튼 / 나가기 ---------- */
-.chat-send { width: 46px; height: 46px; padding: 0; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.chat-send { width: 46px; height: 46px; padding: 0; border-radius: 10px; display: grid; place-items: center; flex: none; }
 .leave-row { display: flex; justify-content: center; padding: 6px 0 28px; }
 .leave-btn { background: none; border: 0; padding: 6px 12px; font: inherit; font-size: 13px; color: var(--gray-500); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .leave-btn:hover { color: var(--brown-700); }
