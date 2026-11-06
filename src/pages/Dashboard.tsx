@@ -37,7 +37,7 @@ export default function Dashboard() {
   const unreg = mt.members.filter((x) => !x.registered)
   const arrived = regd.filter((x) => x.status === 'arrived')
   const needCheck = regd.filter((x) => x.status === 'check')
-  const allDone = mt.members.length >= 2 && mt.members.every((x) => x.registered && x.status === 'arrived')
+  const allDone = mt.members.length >= 1 && mt.members.every((x) => x.registered && x.status === 'arrived')
   const soloList = mt.groups ? regd.filter((x) => !groupOf(mt, x.id) || x.groupDecision === 'declined') : null
   const host = isHost(mt, me)
   const mine = groupOf(mt, me.id)

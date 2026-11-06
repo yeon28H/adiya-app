@@ -97,13 +97,34 @@ export function MeetingRoute() {
       clearTimeout(timer)
       timer = setTimeout(() => void reload(), 150) // 연속 이벤트 묶기
     })
+    // 실시간 알림을 놓쳤을 때(구독 직후나 연결이 잠깐 끊겼을 때)를 대비해 12초마다 한 번 더 확인한다.
+    // 다른 멤버가 나간 것(삭제)은 실시간으로 오지 않는 경우도 있어 특히 필요하다.
+    const poll = setInterval(() => {
+      if (document.visibilityState === 'visible') void reload()
+    }, 12000)
     return () => {
       clearTimeout(timer)
+      clearInterval(poll)
       off()
     }
   }, [meetingId, reload])
 
   const me = state ? (state.mt.members.find((x) => x.userId === state.myUserId) ?? null) : null
+
+  /* ---------- 다른 멤버가 모임을 나가면 알려준다 ---------- */
+  const toastMsg = useToast()
+  const prevRoster = useRef<{ meetingId: string; names: Map<string, string> } | null>(null)
+  useEffect(() => {
+    if (!state) return
+    const names = new Map(state.mt.members.map((m) => [m.id, m.name]))
+    const prev = prevRoster.current
+    if (prev && prev.meetingId === state.mt.id) {
+      for (const [id, name] of prev.names) {
+        if (!names.has(id)) toastMsg(`${name}님이 모임을 나갔어요`)
+      }
+    }
+    prevRoster.current = { meetingId: state.mt.id, names }
+  }, [state, toastMsg])
 
   /* ---------- 채팅 ---------- */
   const [messages, setMessages] = useState<ChatMessage[]>([])
