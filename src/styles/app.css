@@ -113,9 +113,15 @@ svg { flex-shrink: 0; }
 input[type=text], input[type=time], select, input[type=search] {
   width: 100%; min-height: 50px; padding: 0 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--cream-50);
   color: var(--brown-900); font-size: 16px; font-family: inherit;
+  /* 폰(특히 iOS Safari)에서 시간 입력칸이 카드 밖으로 튀어나오지 않게 */
+  min-width: 0; max-width: 100%; box-sizing: border-box; -webkit-appearance: none; appearance: none;
 }
+input[type=time] { display: block; text-align: left; }
+input[type=time]::-webkit-date-and-time-value { text-align: left; }
+input[type=time]::-webkit-calendar-picker-indicator { margin-left: 4px; }
 input:focus, select:focus { outline: none; border-color: var(--yellow-500); box-shadow: 0 0 0 4px rgba(245, 183, 0, .22); background: #fff; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.grid2 > * { min-width: 0; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
 .stepper { display: flex; align-items: center; gap: 12px; }
@@ -291,7 +297,7 @@ input:focus, select:focus { outline: none; border-color: var(--yellow-500); box-
 }
 @container device (max-width: 560px) {
   .container { padding-left: 16px; padding-right: 16px; }
-  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); }
   .card { padding: 20px 18px; }
   .flow { grid-template-columns: 1fr; }
   .nav a.hide-sm { display: none; }

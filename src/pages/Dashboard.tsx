@@ -404,7 +404,7 @@ export default function Dashboard() {
           )}
           {unreg.length > 0 && (
             <article className="card cream group-card">
-              <div className="card-title"><Icon name="clock" size={20} /><h3>아직 귀가 정보를 등록하지 않았어요</h3><span className="tag">{unreg.length}명</span></div>
+              <div className="card-title"><Icon name="clock" size={20} /><h3>아직 귀가 정보를 등록하지 않았어요</h3></div>
               {unreg.map((x) => memberRow(mt, x))}
             </article>
           )}
