@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import StationPicker from '@/components/StationPicker'
+import TimeField from '@/components/TimeField'
 import { useToast } from '@/components/Toast'
 import { Avatar, Back, MODES, Shell } from '@/components/ui'
 import * as api from '@/lib/api'
@@ -224,7 +225,7 @@ export default function Nearby() {
 
           <label className="field">
             <span className="label">출발 예정 시간</span>
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            <TimeField value={time} onChange={setTime} label="출발 시간" />
           </label>
 
           <div className="field">

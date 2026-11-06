@@ -402,3 +402,7 @@ body { overflow-x: hidden; }
 .name-actions { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%; max-width: 480px; margin-top: 10px; }
 .name-actions .bell-btn { flex: none; }
 .name-actions .progress-text, .name-actions .progress-caret { flex: none; }
+
+/* ---------- 시간 선택 (오전/오후 · 시 · 분) ---------- */
+.time-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; width: 100%; }
+.time-field select { min-width: 0; padding: 0 10px; }

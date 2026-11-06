@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Icon from '@/components/Icon'
 import StationPicker from '@/components/StationPicker'
+import TimeField from '@/components/TimeField'
 import { useToast } from '@/components/Toast'
 import { Back, MODES, PRIVACY, Shell, Stepper } from '@/components/ui'
 import { useMeeting } from '@/hooks/useMeeting'
@@ -76,7 +77,7 @@ export default function Register() {
 
         <label className="field">
           <span className="label">예상 출발 시간</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          <TimeField value={time} onChange={setTime} label="출발 시간" />
           {mt.endTime && <div className="hint">모임 해산 예정 시간은 {mt.endTime}이에요.</div>}
           <div className="err">{errs.time}</div>
         </label>

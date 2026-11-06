@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import StationPicker from '@/components/StationPicker'
+import TimeField from '@/components/TimeField'
 import { Back, Shell } from '@/components/ui'
 import { createMeeting } from '@/lib/api'
 import { findStation } from '@/lib/stations'
@@ -93,7 +94,7 @@ export default function Create() {
         <div className="grid2">
           <label className="field">
             <span className="label">예상 해산 시간</span>
-            <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+            <TimeField value={end} onChange={setEnd} label="해산 시간" />
             <div className="err">{errs.end}</div>
           </label>
           <div className="field">
