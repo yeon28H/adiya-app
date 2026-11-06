@@ -16,7 +16,9 @@ export default function Register() {
   const toast = useToast()
   const [origin, setOrigin] = useState(me.origin || mt.placeStation || mt.place)
   const [dest, setDest] = useState(me.dest)
-  const [time, setTime] = useState(me.departTime || fmtTime(toMin(mt.endTime) + 5))
+  const [time, setTime] = useState(
+    me.departTime || fmtTime(mt.endTime ? toMin(mt.endTime) + 5 : new Date().getHours() * 60 + new Date().getMinutes() + 5),
+  )
   const [mode, setMode] = useState(me.mode || '지하철')
   const [privacy, setPrivacy] = useState<Privacy>(me.registered ? me.privacy : 'exact')
   const [errs, setErrs] = useState<Record<string, string>>({})
@@ -54,7 +56,7 @@ export default function Register() {
     const er: Record<string, string> = {}
     const o = findStation(origin)
     const d = findStation(dest)
-    if (!o) er.origin = '호선과 출발역을 선택해 주세요.'
+    if (!o) er.origin = '현재 위치를 설정하거나 출발역을 직접 선택해 주세요.'
     if (!d) er.dest = '호선과 목적지 역을 선택해 주세요.'
     if (!time) er.time = '출발 시간을 선택해 주세요.'
     setErrs(er)
@@ -106,17 +108,23 @@ export default function Register() {
           <div className="err">{errs.origin}</div>
         </div>
 
-        <div className="field">
-          <span className="label">출발역 (매칭 계산용)</span>
-          <StationPicker
-            value={origin}
-            onChange={(k) => {
-              setOrigin(k)
-              setLocNote('')
-            }}
-          />
-          <div className="hint">같은 방향으로 가는 사람을 찾을 때 쓰는 기준 역이에요. 위치를 설정하면 가장 가까운 역으로 자동 선택돼요.</div>
-        </div>
+        <details className="field">
+          <summary className="small" style={{ cursor: 'pointer', fontWeight: 700 }}>
+            GPS를 쓸 수 없나요? 출발역을 직접 선택
+          </summary>
+          <div style={{ marginTop: 10 }}>
+            <StationPicker
+              value={origin}
+              onChange={(k) => {
+                setOrigin(k)
+                setLocNote('')
+              }}
+            />
+            <div className="hint">
+              위치를 설정하면 가장 가까운 역이 출발역으로 자동 선택돼요. 같은 방향 사람을 찾는 계산에만 쓰여요.
+            </div>
+          </div>
+        </details>
 
         <div className="field">
           <span className="label">귀가 목적지 (가까운 역)</span>
@@ -130,7 +138,7 @@ export default function Register() {
         <label className="field">
           <span className="label">예상 출발 시간</span>
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          <div className="hint">모임 해산 예정 시간은 {mt.endTime}이에요.</div>
+          {mt.endTime && <div className="hint">모임 해산 예정 시간은 {mt.endTime}이에요.</div>}
           <div className="err">{errs.time}</div>
         </label>
 

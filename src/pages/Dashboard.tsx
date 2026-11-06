@@ -252,7 +252,7 @@ export default function Dashboard() {
           <h2>{mt.name}</h2>
           <div className="meta">
             <span className="chip"><Icon name="pin" size={16} />{mt.place}</span>
-            <span className="chip"><Icon name="clock" size={16} />{mt.endTime} 해산</span>
+            {mt.endTime && <span className="chip"><Icon name="clock" size={16} />{mt.endTime} 해산</span>}
             <span className="chip"><Icon name="users" size={16} />{mt.members.length}/{mt.capacity}명</span>
             <span className="chip"><Icon name="key" size={16} />{prettyCode(mt.code)}</span>
           </div>

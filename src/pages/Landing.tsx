@@ -45,6 +45,10 @@ export default function Landing() {
                 <Icon name="key" />
                 모임 참여하기
               </Link>
+              <Link className="btn btn-soft btn-lg" to="/nearby">
+                <Icon name="pin" />
+                주변에서 같이 갈 사람 찾기
+              </Link>
             </div>
             <p className="hero-note">
               <Icon name="clock" size={18} />

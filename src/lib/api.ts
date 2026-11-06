@@ -357,3 +357,173 @@ export function subscribeMessages(meetingId: string, onMessage: (m: ChatMessage)
     void supabase.removeChannel(channel)
   }
 }
+
+/* ---------- 주변 귀가 동행 찾기 ---------- */
+
+export interface NearbyPost {
+  id: string
+  displayName: string
+  lat: number
+  lng: number
+  label: string | null
+  originKey: string
+  destKey: string
+  destArea: string
+  departTime: string
+  mode: string
+  expiresAt: number
+}
+
+export interface NearbyPerson {
+  id: string
+  name: string
+  distanceM: number
+  destArea: string
+  departTime: string
+  mode: string
+  /** 나와 귀가 방향 차이(도) */
+  dirDiff: number
+  /** 목적지끼리의 거리(km) */
+  destGapKm: number
+  invited: boolean
+  updatedAt: number
+}
+
+export interface NearbyInvite {
+  id: string
+  fromName: string
+  createdAt: number
+}
+
+export interface NearbyPostInput {
+  name: string
+  lat: number
+  lng: number
+  label: string | null
+  originKey: string
+  destKey: string
+  destArea: string
+  destLat: number
+  destLng: number
+  bearing: number
+  departTime: string
+  mode: string
+  minutes?: number
+}
+
+export async function postNearby(p: NearbyPostInput): Promise<void> {
+  await ensureSession()
+  const { error } = await supabase.rpc('post_nearby', {
+    p_name: p.name,
+    p_lat: p.lat,
+    p_lng: p.lng,
+    p_label: p.label,
+    p_origin_key: p.originKey,
+    p_dest_key: p.destKey,
+    p_dest_area: p.destArea,
+    p_dest_lat: p.destLat,
+    p_dest_lng: p.destLng,
+    p_bearing: p.bearing,
+    p_depart_time: p.departTime,
+    p_mode: p.mode,
+    p_minutes: p.minutes ?? 60,
+  })
+  if (error) throw fail(error.message)
+}
+
+export async function removeNearby(): Promise<void> {
+  const { error } = await supabase.rpc('remove_nearby')
+  if (error) throw fail(error.message)
+}
+
+/** 내가 올려 둔(만료 전) 게시. 없으면 null */
+export async function fetchMyNearbyPost(): Promise<NearbyPost | null> {
+  await ensureSession()
+  const { data, error } = await supabase.from('nearby_posts').select('*').maybeSingle()
+  if (error) throw error
+  if (!data || new Date(data.expires_at).getTime() <= Date.now()) return null
+  return {
+    id: data.id,
+    displayName: data.display_name,
+    lat: data.lat,
+    lng: data.lng,
+    label: data.label,
+    originKey: data.origin_key,
+    destKey: data.dest_key,
+    destArea: data.dest_area,
+    departTime: hhmm(data.depart_time),
+    mode: data.mode,
+    expiresAt: new Date(data.expires_at).getTime(),
+  }
+}
+
+export async function findNearby(radiusM: number): Promise<NearbyPerson[]> {
+  const { data, error } = await supabase.rpc('find_nearby', { p_radius_m: radiusM })
+  if (error) throw fail(error.message)
+  return ((data ?? []) as Row[]).map((r) => ({
+    id: r.id,
+    name: r.display_name,
+    distanceM: r.distance_m,
+    destArea: r.dest_area,
+    departTime: hhmm(r.depart_time),
+    mode: r.mode,
+    dirDiff: r.dir_diff,
+    destGapKm: Number(r.dest_gap_km),
+    invited: r.invited,
+    updatedAt: new Date(r.updated_at).getTime(),
+  }))
+}
+
+/** 함께 귀가 제안. 반환: 내 모임 코드 */
+export async function sendNearbyInvite(postId: string, endTime: string): Promise<string> {
+  const { data, error } = await supabase.rpc('send_nearby_invite', { p_post_id: postId, p_end_time: endTime })
+  if (error) throw fail(error.message)
+  return data as string
+}
+
+/** 초대 수락(모임 코드 반환) / 거절(null 반환) */
+export async function respondNearbyInvite(inviteId: string, accept: boolean): Promise<string | null> {
+  const { data, error } = await supabase.rpc('respond_nearby_invite', { p_invite_id: inviteId, p_accept: accept })
+  if (error) throw fail(error.message)
+  return (data as string | null) ?? null
+}
+
+/** 나에게 온 대기 중 초대 */
+export async function fetchMyInvites(): Promise<NearbyInvite[]> {
+  const userId = await ensureSession()
+  const { data, error } = await supabase
+    .from('nearby_invites')
+    .select('*')
+    .eq('to_user', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map((r: Row) => ({ id: r.id, fromName: r.from_name, createdAt: new Date(r.created_at).getTime() }))
+}
+
+/** 내가 만든 주변 모임(최근) 중 가장 최근 것의 코드와 참여 인원. 없으면 null */
+export async function fetchMyNearbyMeeting(): Promise<{ code: string; name: string; members: number } | null> {
+  const userId = await ensureSession()
+  const { data, error } = await supabase
+    .from('meetings')
+    .select('code,name,members(count)')
+    .eq('kind', 'nearby')
+    .eq('host_user_id', userId)
+    .gt('created_at', new Date(Date.now() - 3 * 3600 * 1000).toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (error) throw error
+  const m = data?.[0] as Row | undefined
+  return m ? { code: m.code, name: m.name, members: m.members?.[0]?.count ?? 1 } : null
+}
+
+/** 나에게 오는 초대(와 보낸 초대의 응답) 변화를 실시간으로 받는다. */
+export function subscribeInvites(onChange: () => void): () => void {
+  const channel = supabase
+    .channel(`invites:${Math.random().toString(36).slice(2)}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'nearby_invites' }, onChange)
+    .subscribe()
+  return () => {
+    void supabase.removeChannel(channel)
+  }
+}
